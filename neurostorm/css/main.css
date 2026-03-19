@@ -1128,6 +1128,60 @@ body::after {
   color: var(--bad);
   font-size: 0.88rem;
   margin: 0;
+  line-height: 1.45;
+}
+
+.result-miss--impact {
+  animation: result-miss-sting 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes result-miss-sting {
+  0% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+  12% {
+    transform: translateX(-5px) skewX(-1.5deg);
+    filter: brightness(1.15);
+  }
+  28% {
+    transform: translateX(4px) skewX(1deg);
+  }
+  44% {
+    transform: translateX(-3px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+}
+
+.result-miss__rub {
+  display: inline;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--bad) 92%, #1a0505);
+  text-shadow: 0 0 0 transparent;
+}
+
+.result-miss__rub--landed {
+  animation: result-rub-punch 0.6s ease-out;
+}
+
+@keyframes result-rub-punch {
+  0% {
+    transform: scale(1.12);
+    text-shadow: 0 0 14px color-mix(in srgb, var(--bad) 55%, transparent);
+  }
+  55% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 0 transparent;
+  }
 }
 
 .result-mode {

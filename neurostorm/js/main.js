@@ -186,10 +186,36 @@ function showResult(stats, role) {
   $("result-money").textContent = `Заработано за смену: ${formatRub(stats.moneyEnd)}`;
   const missed = stats.missedIncome || 0;
   const earned = Math.max(0, stats.moneyEnd || 0);
-  $("result-missed").textContent =
-    missed > 2000
-      ? formatMissedLine(missed, earned)
-      : "Упущения умеренные — запас по темпу есть. Систему можно наращивать без авралов.";
+  const missEl = $("result-missed");
+  if (missed > 2000) {
+    const share = formatMissedShare(missed, earned);
+    const tail =
+      earned > 0 && missed / earned < 0.12
+        ? " На одной смене цифра кажется небольшой на фоне кассы — но это уже доля выручки, а не «мелочь в кармане»."
+        : "";
+    missEl.classList.remove("result-miss--impact");
+    missEl.replaceChildren();
+    missEl.appendChild(
+      document.createTextNode(
+        "Упущенный потенциал (перегруз и тайминг, промахи, развилки, ловушки): ~ ",
+      ),
+    );
+    const rubSpan = document.createElement("span");
+    rubSpan.className = "result-miss__rub";
+    rubSpan.textContent = "…";
+    missEl.appendChild(rubSpan);
+    missEl.appendChild(document.createTextNode(`${share}.${tail}`));
+    requestAnimationFrame(() => {
+      missEl.classList.add("result-miss--impact");
+      animateMissedRubSpan(rubSpan, missed, () => {
+        rubSpan.classList.add("result-miss__rub--landed");
+        setTimeout(() => rubSpan.classList.remove("result-miss__rub--landed"), 700);
+      });
+    });
+  } else {
+    missEl.textContent =
+      "Упущения умеренные — запас по темпу есть. Систему можно наращивать без авралов.";
+  }
   $("result-archetype").textContent = `Ваш режим на рынке: ${arch.title}`;
   const subEl = $("result-subtitle");
   subEl.textContent = arch.subtitle || "";
@@ -273,13 +299,24 @@ function formatMissedShare(missed, earned) {
   return ` (~${formatted}% от выручки за смену)`;
 }
 
-function formatMissedLine(missed, earned) {
-  const share = formatMissedShare(missed, earned);
-  const tail =
-    earned > 0 && missed / earned < 0.12
-      ? " На одной смене цифра кажется небольшой на фоне кассы — но это уже доля выручки, а не «мелочь в кармане»."
-      : "";
-  return `Упущенный потенциал (промахи по выгоде и дорогие решения на развилках): ~ ${formatRub(missed)}${share}.${tail} Не приговор — точка роста.`;
+/** «Рывками» к финальной сумме — красная цифра ощущается неожиданнее */
+function animateMissedRubSpan(span, target, onDone) {
+  let cur = 0;
+  const fmt = (n) =>
+    new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n)) + " ₽";
+  const step = () => {
+    const rem = target - cur;
+    if (rem <= 0) {
+      span.textContent = formatRub(target);
+      onDone?.();
+      return;
+    }
+    const jump = Math.max(1, Math.round(rem * (0.06 + Math.random() * 0.26)));
+    cur = Math.min(target, cur + jump);
+    span.textContent = fmt(cur);
+    setTimeout(step, 28 + Math.random() * 145);
+  };
+  step();
 }
 
 function init() {

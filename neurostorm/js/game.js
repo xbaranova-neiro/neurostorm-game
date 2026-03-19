@@ -4,18 +4,45 @@ import { MARKET_HEADLINES, WAVE_THEMES, CHAOS_LINES, COMBO_FLAVOR } from "./narr
 
 const SESSION_MS = 70_000;
 const WAVE_MS = SESSION_MS / 3;
+/** Плотнее поток падающих карточек (мс между спавнами): ниже значения → больше всего на экране, в т.ч. красных */
+const SPAWN_INTERVAL_START_MS = 1120;
+/** К концу смены интервал уменьшается на столько (ускорение к финалу) */
+const SPAWN_INTERVAL_RAMP_MS = 600;
+/** В хаосе спавн ещё чаще */
+const CHAOS_SPAWN_INTERVAL_MULT = 0.66;
 /** При ~100k «касса» полоска заполнена — визуальный ориентир, не лимит игры */
 const MONEY_BAR_TARGET = 100000;
 
+/** Средний номинал «выгоды» — для штрафов перегруза и перегрева */
+const AVG_GOOD_NOMINAL = (() => {
+  const goods = OBJECT_TYPES.filter((o) => o.kind === "good");
+  if (!goods.length) return 7500;
+  return Math.round(goods.reduce((a, o) => a + Math.abs(o.money || 0), 0) / goods.length);
+})();
+
 /**
- * «Упущенный потенциал» на экране результата — отдельно от кассы.
- * Коэффициенты подняты, чтобы цифра была сопоставима с «заработано» (как в референсе ~1:1 при типичной смене).
+ * «Упущенный потенциал» — 100% номинала там, где это «упущенная выгода / хаос».
  */
-const MISSED_FROM_GOOD_MISS = 0.92;
+const MISSED_FROM_GOOD_MISS = 1.0;
 const MISSED_FROM_GOOD_BURN = 1.0;
 const MISSED_FROM_FORK_LOSS = 1.0;
-/** Доля удара ловушки по ₽, которая идёт в «упущено» (хаос съел фокус и возможности) */
-const MISSED_FROM_TRAP_FRAC = 0.52;
+const MISSED_FROM_TRAP_FRAC = 1.0;
+
+/** Уже N выгод на поле — новая «задача» = перегруз пайплайна (100% от среднего номинала за каждый лишний слот) */
+const OVERLOAD_GOODS_THRESHOLD = 3;
+const MISSED_OVERLOAD_SLOT = 1.0;
+
+/** Пока думаете на развилке, рынок не ждёт — ₽ в упущенный потенциал за секунду паузы (потолок секунд) */
+const FORK_PAUSE_MISS_PER_SEC = 2200;
+const FORK_PAUSE_MISS_MAX_SEC = 22;
+
+/** «Горящая» выгода: чем больше параллельных задач, тем жёстче дедлайн */
+const BURN_BASE_MS = 2600;
+const BURN_RUSH_PER_EXTRA_GOOD_MS = 175;
+const BURN_RUSH_MAX_MS = 1050;
+
+/** Перегрев корзины (взяли слишком много подряд) — тоже полный «средний» слот в упущенном */
+const MISSED_OVERHEAT_FRAC = 1.0;
 
 /** Перегрев: N зелёных подряд без паузы → штраф по энергии */
 const OVERHEAT_GOODS = 5;
@@ -96,8 +123,8 @@ export class Game {
     this.startTime = 0;
     this.lastFrame = 0;
     this.spawnAcc = 0;
-    this.spawnInterval = 1350;
-    this.baseSpawnInterval = 1350;
+    this.spawnInterval = SPAWN_INTERVAL_START_MS;
+    this.baseSpawnInterval = SPAWN_INTERVAL_START_MS;
     this.nextId = 1;
     this.entities = new Map();
     this.combo = 0;
@@ -142,6 +169,7 @@ export class Game {
       wavesCompleted: 0,
       overheatTriggers: 0,
       forkFollowupsResolved: 0,
+      overloadSpawnPenalties: 0,
     };
 
     /** Серия ловли good подряд (сброс по паузе / ловушке / промаху) */
@@ -199,6 +227,16 @@ export class Game {
     this._lastGoodCatchMs = 0;
   }
 
+  /** Сколько выгод сейчас на поле (не собранных) */
+  countActiveGoods(excludeId = null) {
+    let n = 0;
+    for (const [id, ent] of this.entities) {
+      if (excludeId != null && id === excludeId) continue;
+      if (ent.kind === "good" && !ent.collected) n++;
+    }
+    return n;
+  }
+
   start() {
     this.running = true;
     this.startTime = performance.now();
@@ -238,6 +276,7 @@ export class Game {
       wavesCompleted: 0,
       overheatTriggers: 0,
       forkFollowupsResolved: 0,
+      overloadSpawnPenalties: 0,
     };
     this._goodCatchStreak = 0;
     this._lastGoodCatchMs = 0;
@@ -362,8 +401,8 @@ export class Game {
     }
 
     const progress = elapsed / SESSION_MS;
-    this.baseSpawnInterval = 1350 - progress * 520;
-    if (this.chaos) this.baseSpawnInterval *= 0.72;
+    this.baseSpawnInterval = SPAWN_INTERVAL_START_MS - progress * SPAWN_INTERVAL_RAMP_MS;
+    if (this.chaos) this.baseSpawnInterval *= CHAOS_SPAWN_INTERVAL_MULT;
     this.spawnInterval = this.baseSpawnInterval;
 
     const speedMul = 1 + (wave - 1) * 0.22 + (this.chaos ? 0.35 : 0);
@@ -434,8 +473,8 @@ export class Game {
           if (e.kind === "good") {
             this.missGood(e, false);
           } else if (e.kind === "trap") {
-            // Уклонились — это хорошо
             this.stats.trapSwiped++;
+            track("trap_evaded", { id: e.def.id });
           } else if (e.kind === "boost") {
             this.resetCombo("miss_boost");
           }
@@ -460,16 +499,34 @@ export class Game {
       return;
     }
 
+    /** Красные — максимально заметная доля поля; зелёное/фиолетовое чуть реже. */
     const pool = OBJECT_TYPES.map((o) => {
       let w = 1;
-      if (o.kind === "good") w = wave >= 2 ? 1.15 : 1;
-      if (o.kind === "trap") w = wave === 1 ? 0.55 : wave === 2 ? 1 : 1.25;
-      if (o.kind === "boost") w = wave === 1 ? 0.4 : 0.95;
-      if (this.chaos && o.kind === "trap") w *= 1.35;
+      if (o.kind === "good") w = wave >= 2 ? 0.98 : 1;
+      if (o.kind === "trap") {
+        w = wave === 1 ? 1.38 : wave === 2 ? 2.05 : 2.55;
+      }
+      if (o.kind === "boost") w = wave === 1 ? 0.28 : 0.68;
+      if (this.chaos && o.kind === "trap") w *= 1.72;
       return { ...o, _w: w };
     });
 
     const def = pickWeighted(this.rng, pool, "_w");
+    const nGoodBefore = def.kind === "good" ? this.countActiveGoods() : 0;
+
+    if (def.kind === "good" && nGoodBefore >= OVERLOAD_GOODS_THRESHOLD) {
+      const excessSlots = nGoodBefore - OVERLOAD_GOODS_THRESHOLD + 1;
+      const rub = Math.round(AVG_GOOD_NOMINAL * MISSED_OVERLOAD_SLOT * excessSlots);
+      this.missedIncome += rub;
+      this.stats.overloadSpawnPenalties++;
+      track("overload_pipeline", { nGood: nGoodBefore, rub });
+      this.floatPopStack(
+        ["Перегруз пайплайна", `~${formatMoneyHud(rub)} ₽ не вошли в темп`],
+        "bad",
+      );
+      this.vibrate(16);
+    }
+
     const id = this.nextId++;
     const el = document.createElement("div");
     el.className = `floating-obj floating-obj--${def.kind === "trap" ? "trap" : def.kind === "boost" ? "boost" : "good"}`;
@@ -490,6 +547,12 @@ export class Game {
       el.classList.add("floating-obj--burn");
     }
 
+    const burnRush =
+      burning && def.kind === "good"
+        ? Math.min(BURN_RUSH_MAX_MS, nGoodBefore * BURN_RUSH_PER_EXTRA_GOOD_MS)
+        : 0;
+    const burnDeadline = burning ? performance.now() + BURN_BASE_MS - burnRush : 0;
+
     this.field.appendChild(el);
     const entity = {
       id,
@@ -501,7 +564,7 @@ export class Game {
       collected: false,
       defused: false,
       burning,
-      burnDeadline: burning ? performance.now() + 2600 : 0,
+      burnDeadline,
     };
     this.entities.set(id, entity);
   }
@@ -587,6 +650,14 @@ export class Game {
     this._applyForkChoice(choice);
     if (choice.money < 0) {
       this.missedIncome += Math.round(Math.abs(choice.money) * MISSED_FROM_FORK_LOSS);
+    }
+
+    const pauseSecRaw = pauseDur / 1000;
+    const pauseSec = Math.min(FORK_PAUSE_MISS_MAX_SEC, pauseSecRaw);
+    if (pauseSec >= 0.4) {
+      const rub = Math.round(pauseSec * FORK_PAUSE_MISS_PER_SEC);
+      this.missedIncome += rub;
+      track("fork_pause_opportunity", { pauseSec, rub });
     }
 
     if (!isFollowUp) {
@@ -733,10 +804,15 @@ export class Game {
     this._lastGoodCatchMs = 0;
     this.energy = clamp(this.energy + OVERHEAT_ENERGY, 0, 100);
     this.stats.overheatTriggers++;
-    track("basket_overheat", { energyAfter: this.energy });
+    const overMiss = Math.round(AVG_GOOD_NOMINAL * MISSED_OVERHEAT_FRAC);
+    this.missedIncome += overMiss;
+    track("basket_overheat", { energyAfter: this.energy, overMiss });
     this.reportDeltas(
       { money: 0, time: 0, energy: OVERHEAT_ENERGY },
-      { headline: "Перегрев корзины — переработка", mood: "bad" },
+      {
+        headline: `Перегрев корзины — ~${formatMoneyHud(overMiss)} ₽ в упущенном потенциале`,
+        mood: "bad",
+      },
     );
     this.vibrate([12, 45, 12]);
   }
@@ -797,7 +873,7 @@ export class Game {
     this.money = clampMoney(this.money + m);
     this.time = clamp(this.time + tm, 0, 100);
     this.energy = clamp(this.energy + en, 0, 100);
-    this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC * 0.9);
+    this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC);
     this.resetCombo("trap_bottom");
     this.reportDeltas({ money: m, time: tm, energy: en }, { headline: "Ловушка задела", mood: "bad" });
     this.vibrate(25);
@@ -807,7 +883,10 @@ export class Game {
   missGood(e, fromBurn) {
     this.stats.goodMissed++;
     const gross = Math.abs(e.def.money || 5000);
-    const base = gross * MISSED_FROM_GOOD_MISS;
+    const others = this.countActiveGoods(e.id);
+    /** Параллельные задачи и сгоревший тайминг усиливают учёт упущенного */
+    const timingMult = fromBurn ? 1.08 + Math.min(0.22, others * 0.06) : 1 + Math.min(0.45, others * 0.12);
+    const base = gross * MISSED_FROM_GOOD_MISS * timingMult;
     this.missedIncome += base;
     const pain = this.getMoneyPainMult();
     const opp = -Math.round(gross * 0.3 * pain);
@@ -830,7 +909,9 @@ export class Game {
     /** Раньше 12% от номинала — на фоне большой кассы выглядело как «−12 ₽»; теперь ощутимый удар */
     const share = 0.5 + Math.min(0.22, (pain - 1) * 0.12);
     const moneyHit = -Math.round(gross * share);
-    this.missedIncome += gross * MISSED_FROM_GOOD_BURN;
+    const others = this.countActiveGoods(e.id);
+    const timingMult = 1 + Math.min(0.35, others * 0.1);
+    this.missedIncome += gross * MISSED_FROM_GOOD_BURN * timingMult;
     this.money = clampMoney(this.money + moneyHit);
     this.time = clamp(this.time - 6, 0, 100);
     this.energy = clamp(this.energy - 3, 0, 100);
