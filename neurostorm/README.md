@@ -41,8 +41,6 @@ npm run build
 
 События: `game_start`, `role_selected`, `wave_completed`, `booster_caught`, `trap_hit`, `decision_choice`, `final_archetype`, `cta_click`, `cta_form_new_tab`.
 
-**Форма GetCourse:** зелёная CTA открывает **модалку** со скриптом виджета; опционально — ссылка «в новой вкладке». Хостинг по **http(s)** (не `file://`) нужен для загрузки iframe с другого домена.
-
 ## Структура
 
 - `index.html` — экраны

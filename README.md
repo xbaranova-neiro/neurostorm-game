@@ -25,8 +25,6 @@
 3. Деплой Pages иногда занимает **до 5–10 минут** после пуша — подождите и обновите снова.
 4. В **Settings → Pages** проверьте, что источник — ветка **`main`**, папка **`/ (root)`**, и нет ошибки сборки (зелёная галочка у последнего деплоя).
 
-Локально без сервера: откройте в проводнике файл **`neurostorm/index.html`**.
-
 ## Запуск
 
 ```bash
@@ -34,7 +32,7 @@ cd neurostorm
 python3 -m http.server 8080
 ```
 
-Откройте http://localhost:8080 — или `neurostorm/index.html` (через `js/bundle.js` работает и `file://`).
+Откройте http://localhost:8080
 
 Подробности: **[neurostorm/README.md](neurostorm/README.md)**
 

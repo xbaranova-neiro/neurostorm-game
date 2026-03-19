@@ -1591,12 +1591,3 @@ body.gc-popup-open {
 .btn-text-link:hover {
   color: #7ff5dc;
 }
-
-.cta-proof {
-  font-size: 0.72rem;
-  color: var(--muted);
-  text-align: center;
-  margin: 0;
-  opacity: 0.75;
-  line-height: 1.4;
-}

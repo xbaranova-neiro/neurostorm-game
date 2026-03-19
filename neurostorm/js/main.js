@@ -5,7 +5,7 @@ import { track } from "./analytics.js";
 
 const $ = (id) => document.getElementById(id);
 
-/** GetCourse: основной сценарий — модалка + официальный скрипт и startWidget (как раньше). Вкладка — только по кнопке. */
+/** GetCourse: встроенный виджет (startWidget) + опция открыть в новой вкладке. */
 const GC_WIDGET_NUMERIC_ID = "1548726";
 const GC_WIDGET_ORIGIN = "https://xeniabaranova-school.ru";
 const GC_SCRIPT_ID = "d48ff3838cc31a339002de310cb84f2fcb4f866e";
@@ -40,7 +40,7 @@ function closeGetcoursePopup() {
   document.body.classList.remove("gc-popup-open");
 }
 
-/** Модалка с виджетом GetCourse (основной сценарий по зелёной кнопке) */
+/** Оверлей с виджетом GetCourse */
 function openGetcourseModal() {
   const overlay = $("gc-popup-overlay");
   const wrap = $("gc-popup-frame-wrap");
