@@ -7,6 +7,16 @@ const WAVE_MS = SESSION_MS / 3;
 /** При ~100k «касса» полоска заполнена — визуальный ориентир, не лимит игры */
 const MONEY_BAR_TARGET = 100000;
 
+/**
+ * «Упущенный потенциал» на экране результата — отдельно от кассы.
+ * Коэффициенты подняты, чтобы цифра была сопоставима с «заработано» (как в референсе ~1:1 при типичной смене).
+ */
+const MISSED_FROM_GOOD_MISS = 0.92;
+const MISSED_FROM_GOOD_BURN = 1.0;
+const MISSED_FROM_FORK_LOSS = 1.0;
+/** Доля удара ловушки по ₽, которая идёт в «упущено» (хаос съел фокус и возможности) */
+const MISSED_FROM_TRAP_FRAC = 0.52;
+
 /** Перегрев: N зелёных подряд без паузы → штраф по энергии */
 const OVERHEAT_GOODS = 5;
 const OVERHEAT_GAP_MS = 3200;
@@ -576,7 +586,7 @@ export class Game {
 
     this._applyForkChoice(choice);
     if (choice.money < 0) {
-      this.missedIncome += Math.round(Math.abs(choice.money) * 0.88);
+      this.missedIncome += Math.round(Math.abs(choice.money) * MISSED_FROM_FORK_LOSS);
     }
 
     if (!isFollowUp) {
@@ -767,6 +777,7 @@ export class Game {
     this.money = clampMoney(this.money + m);
     this.time = clamp(this.time + tm, 0, 100);
     this.energy = clamp(this.energy + en, 0, 100);
+    this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC);
     this.resetCombo("trap_tap");
     this.reportDeltas(
       { money: m, time: tm, energy: en },
@@ -786,6 +797,7 @@ export class Game {
     this.money = clampMoney(this.money + m);
     this.time = clamp(this.time + tm, 0, 100);
     this.energy = clamp(this.energy + en, 0, 100);
+    this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC * 0.9);
     this.resetCombo("trap_bottom");
     this.reportDeltas({ money: m, time: tm, energy: en }, { headline: "Ловушка задела", mood: "bad" });
     this.vibrate(25);
@@ -795,8 +807,7 @@ export class Game {
   missGood(e, fromBurn) {
     this.stats.goodMissed++;
     const gross = Math.abs(e.def.money || 5000);
-    /** Доля «упущенного» в итоге: была 0.35 — на фоне большой кассы выглядела как «копейки» */
-    const base = gross * 0.52;
+    const base = gross * MISSED_FROM_GOOD_MISS;
     this.missedIncome += base;
     const pain = this.getMoneyPainMult();
     const opp = -Math.round(gross * 0.3 * pain);
@@ -819,7 +830,7 @@ export class Game {
     /** Раньше 12% от номинала — на фоне большой кассы выглядело как «−12 ₽»; теперь ощутимый удар */
     const share = 0.5 + Math.min(0.22, (pain - 1) * 0.12);
     const moneyHit = -Math.round(gross * share);
-    this.missedIncome += gross * 0.85;
+    this.missedIncome += gross * MISSED_FROM_GOOD_BURN;
     this.money = clampMoney(this.money + moneyHit);
     this.time = clamp(this.time - 6, 0, 100);
     this.energy = clamp(this.energy - 3, 0, 100);

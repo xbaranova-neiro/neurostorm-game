@@ -920,6 +920,10 @@
   var SESSION_MS = 7e4;
   var WAVE_MS = SESSION_MS / 3;
   var MONEY_BAR_TARGET = 1e5;
+  var MISSED_FROM_GOOD_MISS = 0.92;
+  var MISSED_FROM_GOOD_BURN = 1;
+  var MISSED_FROM_FORK_LOSS = 1;
+  var MISSED_FROM_TRAP_FRAC = 0.52;
   var OVERHEAT_GOODS = 5;
   var OVERHEAT_GAP_MS = 3200;
   var OVERHEAT_ENERGY = -16;
@@ -1416,7 +1420,7 @@
       const nextPayload = forkDef?.followup?.[choiceIndex];
       this._applyForkChoice(choice);
       if (choice.money < 0) {
-        this.missedIncome += Math.round(Math.abs(choice.money) * 0.88);
+        this.missedIncome += Math.round(Math.abs(choice.money) * MISSED_FROM_FORK_LOSS);
       }
       if (!isFollowUp) {
         track("decision_choice", { fork: forkId, bold: choice.bold, caution: choice.caution });
@@ -1590,6 +1594,7 @@
       this.money = clampMoney(this.money + m);
       this.time = clamp(this.time + tm, 0, 100);
       this.energy = clamp(this.energy + en, 0, 100);
+      this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC);
       this.resetCombo("trap_tap");
       this.reportDeltas(
         { money: m, time: tm, energy: en },
@@ -1608,6 +1613,7 @@
       this.money = clampMoney(this.money + m);
       this.time = clamp(this.time + tm, 0, 100);
       this.energy = clamp(this.energy + en, 0, 100);
+      this.missedIncome += Math.round(Math.abs(m) * MISSED_FROM_TRAP_FRAC * 0.9);
       this.resetCombo("trap_bottom");
       this.reportDeltas({ money: m, time: tm, energy: en }, { headline: "\u041B\u043E\u0432\u0443\u0448\u043A\u0430 \u0437\u0430\u0434\u0435\u043B\u0430", mood: "bad" });
       this.vibrate(25);
@@ -1616,7 +1622,7 @@
     missGood(e, fromBurn) {
       this.stats.goodMissed++;
       const gross = Math.abs(e.def.money || 5e3);
-      const base = gross * 0.52;
+      const base = gross * MISSED_FROM_GOOD_MISS;
       this.missedIncome += base;
       const pain = this.getMoneyPainMult();
       const opp = -Math.round(gross * 0.3 * pain);
@@ -1637,7 +1643,7 @@
       const pain = this.getMoneyPainMult();
       const share = 0.5 + Math.min(0.22, (pain - 1) * 0.12);
       const moneyHit = -Math.round(gross * share);
-      this.missedIncome += gross * 0.85;
+      this.missedIncome += gross * MISSED_FROM_GOOD_BURN;
       this.money = clampMoney(this.money + moneyHit);
       this.time = clamp(this.time - 6, 0, 100);
       this.energy = clamp(this.energy - 3, 0, 100);
