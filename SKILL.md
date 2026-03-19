@@ -45,4 +45,4 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back, sho
 
 ## Пример применения (репозиторий)
 
-Проект **«Нейрошторм»** (`neurostorm/`) — мини-игра под вертикальный web: направление **нео-брутализм / биржевой терминал** (Syne + IBM Plex Sans, кислотный акцент, зерно, жёсткие тени, поэтапный вход экранов, без шаблонного «AI purple gradient»). См. `neurostorm/css/main.css` и шрифты в `neurostorm/index.html`.
+Проект **«Нейрошторм»** (`neurostorm/`) — мини-игра под вертикальный web: **светлая тёплая тема**, Syne + IBM Plex Sans, приглушённые акценты (шалфей / пыльная роза / лаванда), лёгкое зерно, мягкие тени; игровое поле и карточки читаются как «мысли на бумаге», без кислотного неона. См. `neurostorm/css/main.css` и шрифты в `neurostorm/index.html`.

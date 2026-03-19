@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#030306" />
+  <meta name="theme-color" content="#f2f0ec" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Нейрошторм — удержись в рынке</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -39,13 +39,22 @@
       <!-- 3. Onboarding -->
       <section id="screen-onboarding" class="screen" aria-label="Правила" hidden>
         <div class="screen__bg screen__bg--grid"></div>
-        <div class="screen__content">
+        <div class="screen__content screen__content--scroll">
           <h2 class="title">Как читать смену</h2>
           <p class="onboarding-lead">Внизу экрана — «корзина» рынка: подставляйте её под падающие карточки. Зелёное и фиолетовое <strong>ловим</strong>, красное <strong>не ловим</strong> — пусть уходит мимо.</p>
           <ul class="rules">
-            <li><span class="rules__icon rules__icon--good"></span> <strong>Польза</strong> — деньги, время или энергия. Каждая карточка — реальный объект вашей работы.</li>
-            <li><span class="rules__icon rules__icon--bad"></span> <strong>Ловушки</strong> — то, что крадёт фокус и маржу. Не перехватывайте их корзиной.</li>
-            <li><span class="rules__icon rules__icon--fork"></span> <strong>Развилки</strong> — пауза с историей: выбор бьёт сразу по шкалам. Таймер смены стоит, пока думаете.</li>
+            <li>
+              <span class="rules__icon rules__icon--good" aria-hidden="true"></span>
+              <span class="rules__body"><strong>Польза</strong> — деньги, время и энергия. При ловле всплывают строки вроде «плюс в кассу» и «минус часа сна» — три шкалы считаются по отдельности.</span>
+            </li>
+            <li>
+              <span class="rules__icon rules__icon--bad" aria-hidden="true"></span>
+              <span class="rules__body"><strong>Ловушки</strong> — крадут фокус и маржу. Не ловите их корзиной.</span>
+            </li>
+            <li>
+              <span class="rules__icon rules__icon--fork" aria-hidden="true"></span>
+              <span class="rules__body"><strong>Развилки</strong> — пауза с историей: выбор сразу бьёт по шкалам. Таймер смены стоит, пока решаете.</span>
+            </li>
           </ul>
           <div class="resource-legend">
             <div class="resource-legend__item"><span class="pill pill--money">₽ Деньги</span></div>
@@ -59,14 +68,23 @@
       <!-- 4. Игра -->
       <section id="screen-game" class="screen screen--game" aria-label="Игра" hidden>
         <header class="hud">
-          <div class="hud__row">
-            <div class="hud__stat" title="Деньги"><span class="hud__label" aria-hidden="true">₽</span><span id="hud-money">0</span></div>
-            <div class="hud__stat hud__stat--time" title="Время"><span class="hud__label">⏱</span><span id="hud-time">100</span></div>
-            <div class="hud__stat hud__stat--energy" title="Энергия"><span class="hud__label">⚡</span><span id="hud-energy">100</span></div>
-          </div>
-          <div class="hud__bar-wrap">
-            <div class="hud__bar"><div class="hud__bar-fill hud__bar-fill--time" id="bar-time"></div></div>
-            <div class="hud__bar"><div class="hud__bar-fill hud__bar-fill--energy" id="bar-energy"></div></div>
+          <p class="hud__legend" aria-hidden="true">Три шкалы смены: поймал нужное — растёт, поймал ловушку — бьёт по всем</p>
+          <div class="hud__row hud__row--stats">
+            <div class="hud__stat-block" id="hud-stat-money" data-stat="money">
+              <span class="hud__stat-name">Касса</span>
+              <div class="hud__stat" title="Деньги за смену"><span class="hud__label" aria-hidden="true">₽</span><span id="hud-money">0</span></div>
+              <div class="hud__bar hud__bar--thin"><div class="hud__bar-fill hud__bar-fill--money" id="bar-money"></div></div>
+            </div>
+            <div class="hud__stat-block" id="hud-stat-time" data-stat="time">
+              <span class="hud__stat-name">Время</span>
+              <div class="hud__stat hud__stat--time" title="Запас времени (100 = ок)"><span class="hud__label">⏱</span><span id="hud-time">100</span></div>
+              <div class="hud__bar hud__bar--thin"><div class="hud__bar-fill hud__bar-fill--time" id="bar-time"></div></div>
+            </div>
+            <div class="hud__stat-block" id="hud-stat-energy" data-stat="energy">
+              <span class="hud__stat-name">Энергия</span>
+              <div class="hud__stat hud__stat--energy" title="Силы без выгорания"><span class="hud__label">⚡</span><span id="hud-energy">100</span></div>
+              <div class="hud__bar hud__bar--thin"><div class="hud__bar-fill hud__bar-fill--energy" id="bar-energy"></div></div>
+            </div>
           </div>
           <div class="hud__meta">
             <span id="hud-role" class="hud__role"></span>
@@ -77,9 +95,8 @@
           <p class="hud__pulse" id="hud-pulse" aria-live="polite"></p>
         </header>
         <div class="game-field-wrap">
-          <div id="game-field" class="game-field" tabindex="0" role="application" aria-label="Игровое поле" aria-describedby="game-hint">
-            <div class="game-field__hint" id="game-hint">Свайп/ведите палец по полю — двигается корзина · ◀ ▶ или клавиши ← → · Зелёное/фиолетовое ловим, красное мимо</div>
-          </div>
+          <div id="game-field" class="game-field" tabindex="0" role="application" aria-label="Игровое поле" aria-describedby="game-hint"></div>
+          <p class="game-field__hint" id="game-hint">Свайп/ведите палец по полю — двигается корзина · ◀ ▶ или клавиши ← → · Зелёное/фиолетовое ловим, красное мимо</p>
           <div class="game-controls">
             <button type="button" class="game-arrow" id="game-arrow-left" aria-label="Корзина влево">◀</button>
             <span class="game-controls__label" id="game-controls-label">Управление</span>
@@ -87,12 +104,13 @@
           </div>
         </div>
         <div id="fork-overlay" class="fork-overlay" hidden>
-          <div class="fork-card">
-            <p class="fork-card__eyebrow">Развилка · рынок не ждёт</p>
-            <p class="fork-card__title" id="fork-title">Развилка</p>
-            <p class="fork-card__context" id="fork-context"></p>
-            <p class="fork-card__micro">Выберите сценарий — сразу изменятся деньги, время и энергия.</p>
-            <div class="fork-card__choices" id="fork-choices"></div>
+          <div class="fork-plate" role="dialog" aria-modal="true" aria-labelledby="fork-title">
+            <div class="fork-plate__hazard" aria-hidden="true"></div>
+            <p class="fork-plate__strap">Развилка · рынок не ждёт</p>
+            <p class="fork-plate__title" id="fork-title">Развилка</p>
+            <p class="fork-plate__context" id="fork-context"></p>
+            <p class="fork-plate__micro">Выберите шаг — сразу ударит по кассе, времени и энергии.</p>
+            <div class="fork-plate__choices" id="fork-choices"></div>
           </div>
         </div>
         <div id="chaos-banner" class="chaos-banner" hidden>Хаос-режим: рынок ускорился</div>
@@ -138,10 +156,21 @@
       <section id="screen-cta" class="screen" aria-label="Следующий шаг" hidden>
         <div class="screen__bg screen__bg--grid"></div>
         <div class="screen__content screen__content--center">
-          <h2 class="title">Сейчас — самый лёгкий вход</h2>
+          <div class="cta-recap" id="cta-recap">
+            <span class="cta-recap__label">Ваш результат за смену</span>
+            <span class="cta-recap__arch" id="cta-recap-arch"></span>
+            <span class="cta-recap__stat" id="cta-recap-stat"></span>
+          </div>
+          <h2 class="title">Что дальше?</h2>
           <p class="tagline" id="cta-sub"></p>
+          <ul class="cta-features">
+            <li>Разбор вашего профиля по 3 зонам роста</li>
+            <li>Конкретные инструменты под вашу роль и задачи</li>
+            <li>Обучение с опорой на практику — не бесконечная теория и не «разберусь сам»</li>
+          </ul>
           <button type="button" class="btn btn--primary" id="btn-cta-main">Получить мой персональный маршрут</button>
           <button type="button" class="btn btn--ghost" id="btn-cta-secondary">Пройти ещё одну смену</button>
+          <p class="cta-proof">Уже прошли симуляцию и получили маршрут — специалисты из 12 городов</p>
           <p class="fineprint">Форма или CRM подключается с вашей стороны — событие <code>cta_click</code> уже шлётся в консоль.</p>
         </div>
       </section>

@@ -4,6 +4,8 @@ import { MARKET_HEADLINES, WAVE_THEMES, CHAOS_LINES, COMBO_FLAVOR } from "./narr
 
 const SESSION_MS = 70_000;
 const WAVE_MS = SESSION_MS / 3;
+/** При ~100k «касса» полоска заполнена — визуальный ориентир, не лимит игры */
+const MONEY_BAR_TARGET = 100000;
 
 function formatMoney(n) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n)) + " ₽";
@@ -12,6 +14,40 @@ function formatMoney(n) {
 /** Только число для HUD: символ ₽ уже в разметке */
 function formatMoneyHud(n) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n));
+}
+
+/** Человеческие подписи к дельтам шкал */
+function lineMoneyDelta(n) {
+  if (!n) return null;
+  const abs = Math.round(Math.abs(n));
+  const fmt = new Intl.NumberFormat("ru-RU").format(abs);
+  if (n > 0) return `+${fmt} ₽ в кассу`;
+  return `−${fmt} ₽`;
+}
+
+function lineTimeDelta(dt) {
+  if (!dt) return null;
+  const h = Math.max(1, Math.round(Math.abs(dt) / 7));
+  if (dt > 0) return `+${h} ч запаса (не из сна)`;
+  return `−${h} ч сна / личного времени`;
+}
+
+function lineEnergyDelta(de) {
+  if (!de) return null;
+  const s = Math.max(1, Math.round(Math.abs(de) / 5));
+  if (de > 0) return `+${s} ступеней энергии`;
+  return `−${s} к выгоранию`;
+}
+
+function linesFromDeltas(d) {
+  const out = [];
+  const a = lineMoneyDelta(d.money);
+  if (a) out.push(a);
+  const b = lineTimeDelta(d.time);
+  if (b) out.push(b);
+  const c = lineEnergyDelta(d.energy);
+  if (c) out.push(c);
+  return out;
 }
 
 function pickWeighted(random, items, weightKey) {
@@ -116,6 +152,17 @@ export class Game {
 
   setRole(role) {
     this.role = role;
+  }
+
+  /**
+   * Чем выше касса, тем сильнее бьют ловушки по деньгам — иначе −8 тыс на фоне ~400 тыс не читаются.
+   * 1× при малых суммах, до ~2.8× у потолка кассы.
+   */
+  getMoneyPainMult() {
+    const m = this.money;
+    if (m < 55_000) return 1;
+    const t = (m - 55_000) / 155_000;
+    return Math.min(2.8, 1 + t * 1.35);
   }
 
   start() {
@@ -443,6 +490,11 @@ export class Game {
       this.forkChoices.appendChild(btn);
     });
     this.forkOverlay.hidden = false;
+    this.forkOverlay.classList.remove("fork-overlay--open");
+    void this.forkOverlay.offsetWidth;
+    requestAnimationFrame(() => {
+      this.forkOverlay.classList.add("fork-overlay--open");
+    });
     track("decision_choice", { fork: fork.id, phase: "show" });
   }
 
@@ -454,6 +506,7 @@ export class Game {
       if (e.burning && e.burnDeadline) e.burnDeadline += pauseDur;
     }
 
+    this.forkOverlay.classList.remove("fork-overlay--open");
     this.forkOverlay.hidden = true;
     this.forkPending = false;
     this.field.classList.remove("game-field--paused");
@@ -467,7 +520,10 @@ export class Game {
     this.stats.forkCaution += choice.caution || 0;
     this.stats.forkMargin += choice.margin || 0;
     track("decision_choice", { fork: forkId, bold: choice.bold, caution: choice.caution });
-    this.floatPop(choice.money >= 0 ? `+${formatMoney(choice.money)}` : formatMoney(choice.money));
+    this.reportDeltas(
+      { money: choice.money, time: choice.time, energy: choice.energy },
+      { headline: "Развилка · последствия", mood: this.moodFromDeltas({ money: choice.money, time: choice.time, energy: choice.energy }) },
+    );
   }
 
   onFieldPointerDown(ev) {
@@ -562,7 +618,12 @@ export class Game {
     if (tags.includes("text")) this.stats.textCaught++;
     if (tags.includes("visual")) this.stats.visualCaught++;
     if (tags.includes("structure")) this.stats.structureCaught++;
-    this.floatPop(`+${formatMoney(gain)}${this.comboTier > 1 ? ` · x${this.comboTier}` : ""}`);
+    const comboNote = this.comboTier > 1 ? `Комбо ×${this.comboTier}` : null;
+    const lines = linesFromDeltas({ money: gain, time: e.def.time || 0, energy: e.def.energy || 0 });
+    if (comboNote) lines.unshift(comboNote);
+    lines.unshift("В кассу!");
+    this.floatPopStack(lines, this.moodFromDeltas({ money: gain, time: e.def.time || 0, energy: e.def.energy || 0 }));
+    this.pulseFromDeltas({ money: gain, time: e.def.time || 0, energy: e.def.energy || 0 });
     this.vibrate(10);
     this.removeEntity(e.id);
   }
@@ -572,14 +633,16 @@ export class Game {
     this.stats.boosterCaught++;
     const b = e.def.boost;
     if (b === "time") {
-      this.time = clamp(this.time + (e.def.amount || 10), 0, 100);
-      this.floatPop(`+${e.def.amount} времени`);
+      const amt = e.def.amount || 10;
+      this.time = clamp(this.time + amt, 0, 100);
+      this.reportDeltas({ money: 0, time: amt, energy: 0 }, { headline: "Буст · время", mood: "good" });
     } else if (b === "energy") {
-      this.energy = clamp(this.energy + (e.def.amount || 8), 0, 100);
-      this.floatPop(`+${e.def.amount} энергии`);
+      const amt = e.def.amount || 8;
+      this.energy = clamp(this.energy + amt, 0, 100);
+      this.reportDeltas({ money: 0, time: 0, energy: amt }, { headline: "Буст · силы", mood: "good" });
     } else if (b === "combo2") {
       this.nextGoodMultiplier = 2;
-      this.floatPop("x2 к следующему");
+      this.floatPopStack(["×2 к следующему в кассу"], "good");
     }
     const tags = e.def.tags || [];
     if (tags.includes("text")) this.stats.textCaught++;
@@ -593,14 +656,18 @@ export class Game {
   tapTrap(e) {
     this.stats.trapHits++;
     track("trap_hit", { id: e.def.id, how: "tap" });
-    const m = e.def.money || -5000;
+    const pain = this.getMoneyPainMult();
+    const m = Math.round((e.def.money || -5000) * pain);
     const tm = e.def.time || -5;
     const en = e.def.energy || -5;
     this.money = clampMoney(this.money + m);
     this.time = clamp(this.time + tm, 0, 100);
     this.energy = clamp(this.energy + en, 0, 100);
     this.resetCombo("trap_tap");
-    this.floatPop("Ловушка!");
+    this.reportDeltas(
+      { money: m, time: tm, energy: en },
+      { headline: "Ловушка в корзину!", mood: "bad" },
+    );
     this.vibrate([20, 40, 20]);
     this.removeEntity(e.id);
   }
@@ -608,25 +675,34 @@ export class Game {
   hitTrapBottom(e) {
     this.stats.trapHits++;
     track("trap_hit", { id: e.def.id, how: "miss_swipe" });
-    const m = (e.def.money || -5000) * 0.85;
+    const pain = this.getMoneyPainMult();
+    const m = Math.round((e.def.money || -5000) * 0.85 * pain);
     const tm = (e.def.time || -5) * 0.85;
     const en = (e.def.energy || -5) * 0.85;
     this.money = clampMoney(this.money + m);
     this.time = clamp(this.time + tm, 0, 100);
     this.energy = clamp(this.energy + en, 0, 100);
     this.resetCombo("trap_bottom");
+    this.reportDeltas({ money: m, time: tm, energy: en }, { headline: "Ловушка задела", mood: "bad" });
     this.vibrate(25);
     this.removeEntity(e.id);
   }
 
   missGood(e, fromBurn) {
     this.stats.goodMissed++;
-    const base = Math.abs(e.def.money || 5000) * 0.35;
+    const gross = Math.abs(e.def.money || 5000);
+    const base = gross * 0.35;
     this.missedIncome += base;
+    const pain = this.getMoneyPainMult();
+    const opp = -Math.round(gross * 0.3 * pain);
+    this.money = clampMoney(this.money + opp);
     this.time = clamp(this.time - 4, 0, 100);
     this.energy = clamp(this.energy - 2, 0, 100);
     this.resetCombo("miss_good");
-    this.floatPop(fromBurn ? "Упущено!" : "Не успели");
+    this.reportDeltas(
+      { money: opp, time: -4, energy: -2 },
+      { headline: fromBurn ? "Сгорела выгода" : "Мимо — упущено", mood: "bad" },
+    );
     this.removeEntity(e.id);
   }
 
@@ -634,13 +710,20 @@ export class Game {
     if (e.collected) return;
     e.collected = true;
     const gross = Math.abs(e.def.money || 5000);
+    const pain = this.getMoneyPainMult();
+    /** Раньше 12% от номинала — на фоне большой кассы выглядело как «−12 ₽»; теперь ощутимый удар */
+    const share = 0.5 + Math.min(0.22, (pain - 1) * 0.12);
+    const moneyHit = -Math.round(gross * share);
     this.missedIncome += gross * 0.85;
-    this.money = clampMoney(this.money - gross * 0.12);
+    this.money = clampMoney(this.money + moneyHit);
     this.time = clamp(this.time - 6, 0, 100);
     this.energy = clamp(this.energy - 3, 0, 100);
     this.stats.goodMissed++;
     this.resetCombo("burn");
-    this.floatPop("Сгорающая возможность!");
+    this.reportDeltas(
+      { money: moneyHit, time: -6, energy: -3 },
+      { headline: "Сгорающая возможность!", mood: "bad" },
+    );
     this.removeEntity(e.id);
   }
 
@@ -660,14 +743,67 @@ export class Game {
   }
 
   floatPop(text) {
-    const p = document.createElement("div");
-    p.className = "pop";
-    p.textContent = text;
-    p.style.left = "50%";
-    p.style.top = "40%";
-    p.style.color = text.includes("Ловушка") ? "var(--bad)" : "var(--good)";
-    this.field.appendChild(p);
-    setTimeout(() => p.remove(), 950);
+    this.floatPopStack([text], text.includes("Ловушка") || text.includes("−") ? "bad" : "good");
+  }
+
+  /** Несколько строк: деньги / время / энергия — как «шкалы достижений» */
+  floatPopStack(lines, mood = "good") {
+    if (!lines || !lines.length) return;
+    const wrap = document.createElement("div");
+    wrap.className = `pop-stack pop-stack--${mood}`;
+    lines.forEach((line, i) => {
+      const row = document.createElement("div");
+      row.className = "pop-stack__line pop-stack__line--stagger";
+      row.textContent = line;
+      row.style.animationDelay = `${i * 0.07}s`;
+      wrap.appendChild(row);
+    });
+    wrap.style.left = "50%";
+    wrap.style.top = `${36 + Math.min(lines.length, 4) * 2}%`;
+    this.field.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 1200 + lines.length * 80);
+  }
+
+  moodFromDeltas(d) {
+    const signs = [];
+    if (d.money) signs.push(d.money > 0 ? 1 : -1);
+    if (d.time) signs.push(d.time > 0 ? 1 : -1);
+    if (d.energy) signs.push(d.energy > 0 ? 1 : -1);
+    if (!signs.length) return "good";
+    if (signs.every((s) => s > 0)) return "good";
+    if (signs.every((s) => s < 0)) return "bad";
+    return "mixed";
+  }
+
+  reportDeltas(d, opts = {}) {
+    const mood = opts.mood || this.moodFromDeltas(d);
+    const lines = linesFromDeltas(d);
+    if (opts.headline) lines.unshift(opts.headline);
+    if (lines.length) this.floatPopStack(lines, mood);
+    this.pulseFromDeltas(d);
+  }
+
+  pulseFromDeltas(d) {
+    const pulse = (key, dir) => {
+      const el =
+        key === "money"
+          ? this.hud.statMoney
+          : key === "time"
+            ? this.hud.statTime
+            : key === "energy"
+              ? this.hud.statEnergy
+              : null;
+      if (!el) return;
+      el.classList.remove("hud__stat-block--up", "hud__stat-block--down");
+      void el.offsetWidth;
+      el.classList.add(dir === "up" ? "hud__stat-block--up" : "hud__stat-block--down");
+      setTimeout(() => {
+        el.classList.remove("hud__stat-block--up", "hud__stat-block--down");
+      }, 520);
+    };
+    if (d.money) pulse("money", d.money > 0 ? "up" : "down");
+    if (d.time) pulse("time", d.time > 0 ? "up" : "down");
+    if (d.energy) pulse("energy", d.energy > 0 ? "up" : "down");
   }
 
   updateHud(elapsed) {
@@ -677,6 +813,10 @@ export class Game {
     this.hud.money.textContent = formatMoneyHud(this.money);
     this.hud.time.textContent = String(Math.round(this.time));
     this.hud.energy.textContent = String(Math.round(this.energy));
+    if (this.hud.barMoney) {
+      const mp = Math.min(100, (this.money / MONEY_BAR_TARGET) * 100);
+      this.hud.barMoney.style.width = `${mp}%`;
+    }
     this.hud.barTime.style.width = `${this.time}%`;
     this.hud.barEnergy.style.width = `${this.energy}%`;
     let comboTxt = "";

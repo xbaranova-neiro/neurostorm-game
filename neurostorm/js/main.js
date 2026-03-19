@@ -46,8 +46,12 @@ function startGameFlow() {
     money: $("hud-money"),
     time: $("hud-time"),
     energy: $("hud-energy"),
+    barMoney: $("bar-money"),
     barTime: $("bar-time"),
     barEnergy: $("bar-energy"),
+    statMoney: $("hud-stat-money"),
+    statTime: $("hud-stat-time"),
+    statEnergy: $("hud-stat-energy"),
     timer: $("hud-timer"),
     combo: $("hud-combo"),
     wave: $("hud-wave"),
@@ -62,13 +66,13 @@ function startGameFlow() {
     forkOverlay: $("fork-overlay"),
     forkTitle: $("fork-title"),
     forkChoices: $("fork-choices"),
-    onEnd: showResult,
+    onEnd: (stats) => showResult(stats, selectedRole),
   });
   game.setRole(selectedRole);
   game.start();
 }
 
-function showResult(stats) {
+function showResult(stats, role) {
   const arch = computeArchetype(stats);
   track("final_archetype", { key: arch.key, stats });
 
@@ -98,8 +102,8 @@ function showResult(stats) {
   });
   const mistakesBlock = document.querySelector(".result-block--mistakes");
   if (mistakesBlock) mistakesBlock.hidden = !(arch.mistakes && arch.mistakes.length);
-  $("result-case-title").textContent = arch.caseTitle;
-  $("result-case-text").textContent = arch.caseText;
+  $("result-case-title").textContent = (role && role.caseTitle) || arch.caseTitle;
+  $("result-case-text").textContent = (role && role.caseText) || arch.caseText;
 
   const zones = $("result-zones");
   zones.replaceChildren();
@@ -123,6 +127,8 @@ function showResult(stats) {
 
   $("btn-to-cta").onclick = () => {
     showScreen("cta");
+    $("cta-recap-arch").textContent = arch.title;
+    $("cta-recap-stat").textContent = `+ ${formatRub(stats.moneyEnd)} заработано`;
     $("cta-sub").textContent = arch.ctaSub;
     const main = $("btn-cta-main");
     const sec = $("btn-cta-secondary");
