@@ -20,8 +20,8 @@
         <div class="screen__content screen__content--center">
           <p class="eyebrow">Не тест и не лекция — одна смена на виртуальном рынке</p>
           <h1 class="title title--xl">Нейрошторм</h1>
-          <p class="tagline tagline--lead">За ~70 секунд вы не «узнаете про AI», а <strong>проживёте</strong>, где теряете деньги, время и нервы — и какой <strong>первый практический шаг</strong> от этого спасает.</p>
-          <p class="tagline tagline--secondary">Рынок уже разделился: те, кто встроил AI в работу, и те, кто думает начать. Игра покажет, где именно вы — и с чего стартовать сейчас, пока разрыв не стал необратимым.</p>
+          <p class="tagline tagline--lead">За ~70 секунд вы не «узнаете про ИИ», а <strong>проживёте</strong>, где теряете деньги, время и нервы — и какой <strong>первый практический шаг</strong> от этого спасает.</p>
+          <p class="tagline tagline--secondary">Рынок уже разделился: те, кто встроил ИИ в работу, и те, кто думает начать. Игра покажет, где именно вы — и с чего стартовать сейчас, пока разрыв не стал необратимым.</p>
           <button type="button" class="btn btn--primary" id="btn-start">Начать смену</button>
         </div>
       </section>
@@ -96,7 +96,7 @@
         </header>
         <div class="game-field-wrap">
           <div id="game-field" class="game-field" tabindex="0" role="application" aria-label="Игровое поле" aria-describedby="game-hint"></div>
-          <p class="game-field__hint" id="game-hint">Свайп/ведите палец по полю — двигается корзина · ◀ ▶ или клавиши ← → · Зелёное/фиолетовое ловим, красное мимо</p>
+          <p class="game-field__hint" id="game-hint">Свайп/ведите палец по полю — двигается корзина · ◀ ▶ или клавиши ← → · Зелёное/фиолетовое ловим, красное мимо.<br />Мало энергии — корзина двигается медленнее. Много «пользы» подряд без паузы — перегрев по энергии.</p>
           <div class="game-controls">
             <button type="button" class="game-arrow" id="game-arrow-left" aria-label="Корзина влево">◀</button>
             <span class="game-controls__label" id="game-controls-label">Управление</span>
@@ -109,7 +109,7 @@
             <p class="fork-plate__strap">Развилка · рынок не ждёт</p>
             <p class="fork-plate__title" id="fork-title">Развилка</p>
             <p class="fork-plate__context" id="fork-context"></p>
-            <p class="fork-plate__micro">Выберите шаг — сразу ударит по кассе, времени и энергии.</p>
+            <p class="fork-plate__micro">Выберите шаг — сразу ударит по кассе, времени и энергии. Иногда после ответа откроется вторая развилка — последствия первого выбора.</p>
             <div class="fork-plate__choices" id="fork-choices"></div>
           </div>
         </div>
@@ -129,7 +129,7 @@
           <p class="result-text" id="result-body"></p>
           <p class="result-insight" id="result-insight"></p>
           <div class="result-block result-block--mistakes">
-            <h3 class="result-block__title">Типичные ошибки в этом режиме</h3>
+            <h3 class="result-block__title">Что мешало в этой смене</h3>
             <ul class="result-list result-list--mistakes" id="result-mistakes"></ul>
           </div>
           <div class="result-case">
@@ -137,15 +137,15 @@
             <p class="result-case__text" id="result-case-text"></p>
           </div>
           <div class="result-block">
-            <h3 class="result-block__title">Где нейросети помогут именно вам</h3>
+            <h3 class="result-block__title">Где ИИ реально поможет</h3>
             <ul class="result-list" id="result-zones"></ul>
           </div>
           <div class="result-block">
-            <h3 class="result-block__title">Ваш первый простой шаг</h3>
+            <h3 class="result-block__title">С чего начать</h3>
             <p class="result-step" id="result-step"></p>
           </div>
           <div class="result-block">
-            <h3 class="result-block__title">Инструменты для старта</h3>
+            <h3 class="result-block__title">Попробуйте сначала</h3>
             <div class="result-tools" id="result-tools"></div>
           </div>
           <button type="button" class="btn btn--primary" id="btn-to-cta">Дальше</button>
@@ -168,16 +168,41 @@
             <li>Конкретные инструменты под вашу роль и задачи</li>
             <li>Обучение с опорой на практику — не бесконечная теория и не «разберусь сам»</li>
           </ul>
+          <!-- Форма GetCourse: зелёная кнопка — модалка; по желанию — новая вкладка -->
           <button type="button" class="btn btn--primary" id="btn-cta-main">Получить мой персональный маршрут</button>
+          <p class="cta-form-alt">
+            <button type="button" class="btn-text-link" id="btn-cta-form-newtab">
+              Удобнее в новой вкладке — открыть там
+            </button>
+          </p>
           <button type="button" class="btn btn--ghost" id="btn-cta-secondary">Пройти ещё одну смену</button>
           <p class="cta-proof">Уже прошли симуляцию и получили маршрут — специалисты из 12 городов</p>
-          <p class="fineprint">Форма или CRM подключается с вашей стороны — событие <code>cta_click</code> уже шлётся в консоль.</p>
+          <p class="fineprint">
+            Зелёная кнопка открывает форму <strong>в окне поверх игры</strong>. Запускайте с сайта или <code>localhost</code>, не как <code>file://</code>.
+          </p>
         </div>
       </section>
     </div>
   </div>
+
+  <!-- Попап GetCourse: iframe создаётся из JS по клику на CTA -->
+  <div id="gc-popup-overlay" class="gc-popup-overlay" hidden>
+    <div class="gc-popup-overlay__backdrop" id="gc-popup-backdrop" role="presentation"></div>
+    <div class="gc-popup" role="dialog" aria-modal="true" aria-label="Форма">
+      <div class="gc-popup__head gc-popup__head--toolbar">
+        <div class="gc-popup__head-actions">
+          <button type="button" class="gc-popup__linkout" id="gc-popup-open-tab" title="Открыть форму в новой вкладке">
+            ↗ Вкладка
+          </button>
+          <button type="button" class="gc-popup__close" id="gc-popup-close" aria-label="Закрыть">×</button>
+        </div>
+      </div>
+      <div class="gc-popup__frame-wrap" id="gc-popup-frame-wrap"></div>
+    </div>
+  </div>
+
   <!-- Обычный скрипт (не module): так кнопка работает и при открытии файла по file:// -->
-  <script src="js/bundle.js" defer></script>
+  <script id="neurostorm-bundle" src="js/bundle.js" defer></script>
   <noscript>Включите JavaScript. Либо откройте сайт через локальный сервер: <code>python3 -m http.server</code></noscript>
 </body>
 </html>

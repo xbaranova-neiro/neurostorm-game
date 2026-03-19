@@ -719,6 +719,20 @@ body::after {
     0 4px 12px rgba(28, 27, 25, 0.2);
 }
 
+.catcher--low-energy:not(.catcher--combo) {
+  opacity: 0.88;
+  filter: saturate(0.75);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 2px 0 var(--ink-strong),
+    0 2px 8px rgba(28, 27, 25, 0.15);
+}
+
+.catcher--combo.catcher--low-energy {
+  opacity: 0.9;
+  filter: saturate(0.82);
+}
+
 /* Под полем и корзиной — не пересекается с движущимся catcher */
 .game-field__hint {
   flex-shrink: 0;
@@ -1408,6 +1422,174 @@ body::after {
   color: var(--accent);
   font-weight: 700;
   font-size: 0.8rem;
+}
+
+/* GetCourse: модальное окно с формой */
+.gc-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.gc-popup-overlay[hidden] {
+  display: none !important;
+}
+
+.gc-popup-overlay:not([hidden]) {
+  pointer-events: auto;
+}
+
+.gc-popup-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 22, 24, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.gc-popup {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 500px);
+  max-height: min(92vh, 760px);
+  display: flex;
+  flex-direction: column;
+  background: #f6f4ef;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.gc-popup__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 229, 184, 0.25);
+}
+
+.gc-popup__head--toolbar {
+  justify-content: flex-end;
+}
+
+.gc-popup__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.gc-popup__linkout {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gc-popup__linkout:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.gc-popup__title {
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.gc-popup__close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gc-popup__close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.gc-popup__frame-wrap {
+  flex: 1 1 auto;
+  min-height: min(420px, 55vh);
+  max-height: calc(92vh - 56px);
+  width: 100%;
+  background: #fff;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iframe создаёт GetCourse; высоту выставляет их postMessage */
+.gc-popup__frame-wrap iframe {
+  width: 100% !important;
+  max-width: 100%;
+  border: none;
+  display: block;
+  vertical-align: top;
+}
+
+.gc-popup__err {
+  margin: 0;
+  padding: 20px 16px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #333;
+  text-align: center;
+}
+
+.gc-popup__err a {
+  color: var(--accent, #00e5b8);
+  font-weight: 600;
+}
+
+body.gc-popup-open {
+  overflow: hidden;
+}
+
+.cta-form-alt {
+  margin: -4px 0 8px;
+  text-align: center;
+}
+
+.btn-text-link {
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent, #00e5b8);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.btn-text-link:hover {
+  color: #7ff5dc;
 }
 
 .cta-proof {

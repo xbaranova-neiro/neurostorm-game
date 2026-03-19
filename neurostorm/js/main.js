@@ -5,6 +5,97 @@ import { track } from "./analytics.js";
 
 const $ = (id) => document.getElementById(id);
 
+/** GetCourse: основной сценарий — модалка + официальный скрипт и startWidget (как раньше). Вкладка — только по кнопке. */
+const GC_WIDGET_NUMERIC_ID = "1548726";
+const GC_WIDGET_ORIGIN = "https://xeniabaranova-school.ru";
+const GC_SCRIPT_ID = "d48ff3838cc31a339002de310cb84f2fcb4f866e";
+const GC_SCRIPT_SRC = `${GC_WIDGET_ORIGIN}/pl/lite/widget/script?id=${GC_WIDGET_NUMERIC_ID}`;
+
+function buildGetcourseWidgetUrl() {
+  const qs = window.location.search ? `${window.location.search.substring(1)}&` : "";
+  let url = `${GC_WIDGET_ORIGIN}/pl/lite/widget/widget?${qs}id=${GC_WIDGET_NUMERIC_ID}&ref=${encodeURIComponent(document.referrer)}&loc=${encodeURIComponent(window.location.href)}`;
+  try {
+    if (window.clrtQueryData) {
+      url += `&clrtQueryData=${encodeURIComponent(JSON.stringify(window.clrtQueryData))}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return url;
+}
+
+function openGetcourseInNewTab() {
+  const url = buildGetcourseWidgetUrl();
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function gcWidgetFallbackHtml() {
+  const href = buildGetcourseWidgetUrl();
+  return `<p class="gc-popup__err">Не удалось встроить форму. <a href="${href}" target="_blank" rel="noopener">Открыть в новой вкладке</a></p>`;
+}
+
+function closeGetcoursePopup() {
+  const overlay = $("gc-popup-overlay");
+  if (overlay) overlay.hidden = true;
+  document.body.classList.remove("gc-popup-open");
+}
+
+/** Модалка с виджетом GetCourse (основной сценарий по зелёной кнопке) */
+function openGetcourseModal() {
+  const overlay = $("gc-popup-overlay");
+  const wrap = $("gc-popup-frame-wrap");
+  if (!overlay || !wrap) return;
+
+  overlay.hidden = false;
+  document.body.classList.add("gc-popup-open");
+
+  if (wrap.querySelector("iframe")) return;
+  if (wrap.dataset.gcLoading === "1") return;
+  if (document.getElementById(GC_SCRIPT_ID)) return;
+
+  wrap.replaceChildren();
+  wrap.dataset.gcLoading = "1";
+  wrap.style.overflow = "hidden";
+
+  const s = document.createElement("script");
+  s.id = GC_SCRIPT_ID;
+  s.src = GC_SCRIPT_SRC;
+  s.async = true;
+  s.onerror = () => {
+    wrap.dataset.gcLoading = "0";
+    wrap.innerHTML = gcWidgetFallbackHtml();
+  };
+  s.onload = () => {
+    wrap.dataset.gcLoading = "0";
+    const starter = window[`startWidget${GC_SCRIPT_ID}`];
+    if (typeof starter === "function") {
+      try {
+        starter();
+      } catch (e) {
+        console.error("neurostorm: GetCourse startWidget", e);
+        wrap.innerHTML = gcWidgetFallbackHtml();
+        return;
+      }
+    } else {
+      wrap.innerHTML = gcWidgetFallbackHtml();
+      return;
+    }
+    wrap.style.overflow = "auto";
+    wrap.style.maxHeight = "calc(92vh - 56px)";
+    requestAnimationFrame(() => {
+      const ifr = wrap.querySelector("iframe");
+      if (!ifr) return;
+      const parsed = parseInt(String(ifr.style.height || "0"), 10);
+      if (parsed < 120) ifr.style.minHeight = `${Math.min(520, Math.round(window.innerHeight * 0.75))}px`;
+    });
+  };
+  wrap.appendChild(s);
+}
+
+function openGetcourseWidgetFromCta() {
+  openGetcourseModal();
+}
+
 function showScreen(name) {
   document.querySelectorAll(".screen").forEach((s) => {
     s.classList.remove("screen--active");
@@ -80,9 +171,10 @@ function showResult(stats, role) {
   $("result-headline").textContent = "Смена закончилась — вот что она показала";
   $("result-money").textContent = `Заработано за смену: ${formatRub(stats.moneyEnd)}`;
   const missed = stats.missedIncome || 0;
+  const earned = Math.max(0, stats.moneyEnd || 0);
   $("result-missed").textContent =
     missed > 2000
-      ? `Упущено из-за ручного режима и нерешительности: ~ ${formatRub(missed)}. Не приговор — точка роста.`
+      ? formatMissedLine(missed, earned)
       : "Упущения умеренные — запас по темпу есть. Систему можно наращивать без авралов.";
   $("result-archetype").textContent = `Ваш режим на рынке: ${arch.title}`;
   const subEl = $("result-subtitle");
@@ -136,7 +228,7 @@ function showResult(stats, role) {
     sec.textContent = arch.ctaSecondary;
     main.onclick = () => {
       track("cta_click", { which: "main", archetype: arch.key });
-      alert("Здесь — ваша форма, бот или CRM. Событие уже в консоли.");
+      openGetcourseWidgetFromCta();
     };
     sec.onclick = () => {
       track("cta_click", { which: "secondary", archetype: arch.key });
@@ -147,6 +239,29 @@ function showResult(stats, role) {
 
 function formatRub(n) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n)) + " ₽";
+}
+
+/** Доля упущенного от кассы — чтобы большая «заработано» не обесценивала абсолют */
+function formatMissedShare(missed, earned) {
+  if (earned <= 0) return "";
+  const pct = (missed / earned) * 100;
+  const formatted =
+    pct < 0.05
+      ? "менее 0,1"
+      : new Intl.NumberFormat("ru-RU", {
+          maximumFractionDigits: pct < 10 ? 1 : 0,
+          minimumFractionDigits: 0,
+        }).format(Math.round(pct * 10) / 10);
+  return ` (~${formatted}% от выручки за смену)`;
+}
+
+function formatMissedLine(missed, earned) {
+  const share = formatMissedShare(missed, earned);
+  const tail =
+    earned > 0 && missed / earned < 0.12
+      ? " На одной смене цифра кажется небольшой на фоне кассы — но это уже доля выручки, а не «мелочь в кармане»."
+      : "";
+  return `Упущенный потенциал (промахи по выгоде и дорогие решения на развилках): ~ ${formatRub(missed)}${share}.${tail} Не приговор — точка роста.`;
 }
 
 function init() {
@@ -165,6 +280,34 @@ function init() {
       startGameFlow();
     });
   }
+
+  const gcClose = $("gc-popup-close");
+  const gcBackdrop = $("gc-popup-backdrop");
+  const gcOpenTab = $("gc-popup-open-tab");
+  const ctaNewTab = $("btn-cta-form-newtab");
+  if (gcClose) gcClose.addEventListener("click", closeGetcoursePopup);
+  if (gcBackdrop) gcBackdrop.addEventListener("click", closeGetcoursePopup);
+  if (gcOpenTab) {
+    gcOpenTab.addEventListener("click", () => {
+      track("cta_form_new_tab", { from: "modal_header" });
+      openGetcourseInNewTab();
+    });
+  }
+  if (ctaNewTab) {
+    ctaNewTab.addEventListener("click", () => {
+      track("cta_form_new_tab", { from: "cta_screen" });
+      openGetcourseInNewTab();
+    });
+  }
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape") return;
+    const overlay = $("gc-popup-overlay");
+    if (overlay && !overlay.hidden) {
+      closeGetcoursePopup();
+      ev.preventDefault();
+    }
+  });
+
 }
 
 if (document.readyState === "loading") {

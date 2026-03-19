@@ -7,6 +7,13 @@ const WAVE_MS = SESSION_MS / 3;
 /** При ~100k «касса» полоска заполнена — визуальный ориентир, не лимит игры */
 const MONEY_BAR_TARGET = 100000;
 
+/** Перегрев: N зелёных подряд без паузы → штраф по энергии */
+const OVERHEAT_GOODS = 5;
+const OVERHEAT_GAP_MS = 3200;
+const OVERHEAT_ENERGY = -16;
+
+const FORK_FOLLOWUP_ID = "__followup__";
+
 function formatMoney(n) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n)) + " ₽";
 }
@@ -123,7 +130,13 @@ export class Game {
       forkMargin: 0,
       comboMax: 0,
       wavesCompleted: 0,
+      overheatTriggers: 0,
+      forkFollowupsResolved: 0,
     };
+
+    /** Серия ловли good подряд (сброс по паузе / ловушке / промаху) */
+    this._goodCatchStreak = 0;
+    this._lastGoodCatchMs = 0;
 
     this._raf = null;
     this._boundLoop = this.loop.bind(this);
@@ -165,6 +178,17 @@ export class Game {
     return Math.min(2.8, 1 + t * 1.35);
   }
 
+  /** Низкая энергия — корзина ведёт себя «тяжелее» */
+  getCatcherMovePxPerSec() {
+    if (this.energy < 20) return this.MOVE_PX_PER_SEC * 0.5;
+    return this.MOVE_PX_PER_SEC;
+  }
+
+  resetGoodCatchStreak() {
+    this._goodCatchStreak = 0;
+    this._lastGoodCatchMs = 0;
+  }
+
   start() {
     this.running = true;
     this.startTime = performance.now();
@@ -202,7 +226,11 @@ export class Game {
       forkMargin: 0,
       comboMax: 0,
       wavesCompleted: 0,
+      overheatTriggers: 0,
+      forkFollowupsResolved: 0,
     };
+    this._goodCatchStreak = 0;
+    this._lastGoodCatchMs = 0;
 
     this.catcherEl = document.createElement("div");
     this.catcherEl.className = "catcher";
@@ -337,7 +365,8 @@ export class Game {
       if (this._holdRight) dir += 1;
       if (dir !== 0) {
         const maxX = Math.max(0, this.field.clientWidth - this.CATCHER_W);
-        this.catcherX = clamp(this.catcherX + dir * this.MOVE_PX_PER_SEC * dt, 0, maxX);
+        const v = this.getCatcherMovePxPerSec();
+        this.catcherX = clamp(this.catcherX + dir * v * dt, 0, maxX);
       }
 
       this.spawnAcc += dt * 1000;
@@ -355,6 +384,7 @@ export class Game {
         // Визуальный отклик на комбо
         const isCombo = this.comboTier > 1;
         this.catcherEl.classList.toggle("catcher--combo", isCombo);
+        this.catcherEl.classList.toggle("catcher--low-energy", this.energy < 20);
       }
 
       const toRemove = [];
@@ -478,7 +508,7 @@ export class Game {
     this.forkTitle.textContent = fork.title;
     if (this.forkContext) this.forkContext.textContent = fork.context || "";
     this.forkChoices.replaceChildren();
-    fork.choices.forEach((c) => {
+    fork.choices.forEach((c, choiceIndex) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "fork-choice";
@@ -486,7 +516,7 @@ export class Game {
         ? `<span class="fork-choice__hint">${escHtml(c.hint)}</span>`
         : "";
       btn.innerHTML = `<span class="fork-choice__text">${escHtml(c.text)}</span>${hintHtml}`;
-      btn.addEventListener("click", () => this.resolveFork(fork.id, c));
+      btn.addEventListener("click", () => this.resolveFork(fork.id, c, choiceIndex));
       this.forkChoices.appendChild(btn);
     });
     this.forkOverlay.hidden = false;
@@ -498,12 +528,76 @@ export class Game {
     track("decision_choice", { fork: fork.id, phase: "show" });
   }
 
-  resolveFork(forkId, choice) {
+  _applyForkChoice(choice) {
+    this.money = clampMoney(this.money + choice.money);
+    this.time = clamp(this.time + choice.time, 0, 100);
+    this.energy = clamp(this.energy + choice.energy, 0, 100);
+    this.stats.forkBold += choice.bold || 0;
+    this.stats.forkCaution += choice.caution || 0;
+    this.stats.forkMargin += choice.margin || 0;
+  }
+
+  /** Вторая развилка цепочки (без вложенных followup) */
+  _showForkFollowup(payload) {
+    this.forkTitle.textContent = payload.title;
+    if (this.forkContext) this.forkContext.textContent = payload.context || "";
+    this.forkChoices.replaceChildren();
+    payload.choices.forEach((c, choiceIndex) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "fork-choice";
+      const hintHtml = c.hint
+        ? `<span class="fork-choice__hint">${escHtml(c.hint)}</span>`
+        : "";
+      btn.innerHTML = `<span class="fork-choice__text">${escHtml(c.text)}</span>${hintHtml}`;
+      btn.addEventListener("click", () => this.resolveFork(FORK_FOLLOWUP_ID, c, choiceIndex));
+      this.forkChoices.appendChild(btn);
+    });
+    this.forkOverlay.classList.remove("fork-overlay--open");
+    void this.forkOverlay.offsetWidth;
+    requestAnimationFrame(() => {
+      this.forkOverlay.classList.add("fork-overlay--open");
+    });
+    this._pauseWallStart = performance.now();
+    track("decision_choice", { fork: "chain_second", phase: "show" });
+  }
+
+  resolveFork(forkId, choice, choiceIndex = 0) {
     const wall = performance.now();
     const pauseDur = wall - this._pauseWallStart;
     this.pauseMsTotal += pauseDur;
     for (const e of this.entities.values()) {
       if (e.burning && e.burnDeadline) e.burnDeadline += pauseDur;
+    }
+
+    const isFollowUp = forkId === FORK_FOLLOWUP_ID;
+    const forkDef = !isFollowUp ? FORKS.find((f) => f.id === forkId) : null;
+    const nextPayload = forkDef?.followup?.[choiceIndex];
+
+    this._applyForkChoice(choice);
+    if (choice.money < 0) {
+      this.missedIncome += Math.round(Math.abs(choice.money) * 0.88);
+    }
+
+    if (!isFollowUp) {
+      track("decision_choice", { fork: forkId, bold: choice.bold, caution: choice.caution });
+    } else {
+      this.stats.forkFollowupsResolved++;
+      track("fork_chain_second", { phase: "resolved" });
+    }
+
+    this.reportDeltas(
+      { money: choice.money, time: choice.time, energy: choice.energy },
+      {
+        headline: isFollowUp ? "Развилка · итог цепочки" : "Развилка · последствия",
+        mood: this.moodFromDeltas({ money: choice.money, time: choice.time, energy: choice.energy }),
+      },
+    );
+
+    if (nextPayload) {
+      this.lastFrame = wall;
+      this._showForkFollowup(nextPayload);
+      return;
     }
 
     this.forkOverlay.classList.remove("fork-overlay--open");
@@ -512,18 +606,6 @@ export class Game {
     this.field.classList.remove("game-field--paused");
     if (this.gameHint) this.gameHint.hidden = false;
     this.lastFrame = wall;
-
-    this.money = clampMoney(this.money + choice.money);
-    this.time = clamp(this.time + choice.time, 0, 100);
-    this.energy = clamp(this.energy + choice.energy, 0, 100);
-    this.stats.forkBold += choice.bold || 0;
-    this.stats.forkCaution += choice.caution || 0;
-    this.stats.forkMargin += choice.margin || 0;
-    track("decision_choice", { fork: forkId, bold: choice.bold, caution: choice.caution });
-    this.reportDeltas(
-      { money: choice.money, time: choice.time, energy: choice.energy },
-      { headline: "Развилка · последствия", mood: this.moodFromDeltas({ money: choice.money, time: choice.time, energy: choice.energy }) },
-    );
   }
 
   onFieldPointerDown(ev) {
@@ -550,7 +632,8 @@ export class Game {
     const dx = x - this._dragLastFieldX;
     this._dragLastFieldX = x;
     const maxX = Math.max(0, this.field.clientWidth - this.CATCHER_W);
-    this.catcherX = clamp(this.catcherX + dx, 0, maxX);
+    const dragSlow = this.energy < 20 ? 0.52 : 1;
+    this.catcherX = clamp(this.catcherX + dx * dragSlow, 0, maxX);
   }
 
   onFieldPointerUp(ev) {
@@ -601,6 +684,7 @@ export class Game {
 
   collectGood(e) {
     e.collected = true;
+    const now = performance.now();
     const mult = this.nextGoodMultiplier * this.comboTier;
     this.nextGoodMultiplier = 1;
     const gain = e.def.money * mult;
@@ -625,11 +709,31 @@ export class Game {
     this.floatPopStack(lines, this.moodFromDeltas({ money: gain, time: e.def.time || 0, energy: e.def.energy || 0 }));
     this.pulseFromDeltas({ money: gain, time: e.def.time || 0, energy: e.def.energy || 0 });
     this.vibrate(10);
+    this._tickBasketOverheat(now);
     this.removeEntity(e.id);
+  }
+
+  /** Подряд много «пользы» без паузы — перегрев по энергии */
+  _tickBasketOverheat(now) {
+    if (now - this._lastGoodCatchMs > OVERHEAT_GAP_MS) this._goodCatchStreak = 0;
+    this._lastGoodCatchMs = now;
+    this._goodCatchStreak++;
+    if (this._goodCatchStreak < OVERHEAT_GOODS) return;
+    this._goodCatchStreak = 0;
+    this._lastGoodCatchMs = 0;
+    this.energy = clamp(this.energy + OVERHEAT_ENERGY, 0, 100);
+    this.stats.overheatTriggers++;
+    track("basket_overheat", { energyAfter: this.energy });
+    this.reportDeltas(
+      { money: 0, time: 0, energy: OVERHEAT_ENERGY },
+      { headline: "Перегрев корзины — переработка", mood: "bad" },
+    );
+    this.vibrate([12, 45, 12]);
   }
 
   collectBoost(e) {
     e.collected = true;
+    this.resetGoodCatchStreak();
     this.stats.boosterCaught++;
     const b = e.def.boost;
     if (b === "time") {
@@ -691,7 +795,8 @@ export class Game {
   missGood(e, fromBurn) {
     this.stats.goodMissed++;
     const gross = Math.abs(e.def.money || 5000);
-    const base = gross * 0.35;
+    /** Доля «упущенного» в итоге: была 0.35 — на фоне большой кассы выглядела как «копейки» */
+    const base = gross * 0.52;
     this.missedIncome += base;
     const pain = this.getMoneyPainMult();
     const opp = -Math.round(gross * 0.3 * pain);
@@ -731,6 +836,7 @@ export class Game {
     this.combo = 0;
     this.comboTier = 1;
     this.nextGoodMultiplier = 1;
+    this.resetGoodCatchStreak();
     void reason;
   }
 

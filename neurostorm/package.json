@@ -1,0 +1,12 @@
+{
+  "name": "neurostorm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild js/main.js --bundle --outfile=js/bundle.js --format=iife --target=es2020",
+    "watch": "esbuild js/main.js --bundle --outfile=js/bundle.js --format=iife --target=es2020 --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
