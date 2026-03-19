@@ -1846,7 +1846,19 @@
     };
     wrap.appendChild(s);
   }
+  function isGetcourseEmbedLikelyBlocked() {
+    try {
+      const h = window.location.hostname || "";
+      return h.endsWith(".github.io");
+    } catch {
+      return false;
+    }
+  }
   function openGetcourseWidgetFromCta() {
+    if (isGetcourseEmbedLikelyBlocked()) {
+      openGetcourseInNewTab();
+      return;
+    }
     openGetcourseModal();
   }
   function showScreen(name) {
@@ -1966,7 +1978,11 @@
       main.textContent = arch.ctaMain;
       sec.textContent = arch.ctaSecondary;
       main.onclick = () => {
-        track("cta_click", { which: "main", archetype: arch.key });
+        track("cta_click", {
+          which: "main",
+          archetype: arch.key,
+          getcourse_open: isGetcourseEmbedLikelyBlocked() ? "new_tab" : "modal"
+        });
         openGetcourseWidgetFromCta();
       };
       sec.onclick = () => {
