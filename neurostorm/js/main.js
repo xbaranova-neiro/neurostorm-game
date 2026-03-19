@@ -130,8 +130,7 @@ function buildRoles() {
     b.type = "button";
     b.className = "role-card";
     const pitch = r.pitch || r.desc || "";
-    const story = r.story || "";
-    b.innerHTML = `<span class="role-card__emoji" aria-hidden="true">${r.emoji}</span><span class="role-card__name">${r.name}</span><span class="role-card__pitch">${pitch}</span>${story ? `<span class="role-card__story">${story}</span>` : ""}`;
+    b.innerHTML = `<span class="role-card__emoji" aria-hidden="true">${r.emoji}</span><span class="role-card__name">${r.name}</span><span class="role-card__pitch">${pitch}</span>`;
     b.addEventListener("click", () => {
       selectedRole = r;
       track("role_selected", { role: r.id });
@@ -157,7 +156,8 @@ function startGameFlow() {
     statMoney: $("hud-stat-money"),
     statTime: $("hud-stat-time"),
     statEnergy: $("hud-stat-energy"),
-    timer: $("hud-timer"),
+    timerDay: $("hud-timer-day"),
+    timerReal: $("hud-timer-real"),
     combo: $("hud-combo"),
     wave: $("hud-wave"),
     pulse: $("hud-pulse"),
@@ -182,8 +182,8 @@ function showResult(stats, role) {
   track("final_archetype", { key: arch.key, stats });
 
   showScreen("result");
-  $("result-headline").textContent = "Смена закончилась — вот что она показала";
-  $("result-money").textContent = `Заработано за смену: ${formatRub(stats.moneyEnd)}`;
+  $("result-headline").textContent = "Раунд закончен — краткий итог";
+  $("result-money").textContent = `В кассе: ${formatRub(stats.moneyEnd)}`;
   const missed = stats.missedIncome || 0;
   const earned = Math.max(0, stats.moneyEnd || 0);
   const missEl = $("result-missed");
@@ -191,13 +191,13 @@ function showResult(stats, role) {
     const share = formatMissedShare(missed, earned);
     const tail =
       earned > 0 && missed / earned < 0.12
-        ? " На одной смене цифра кажется небольшой на фоне кассы — но это уже доля выручки, а не «мелочь в кармане»."
+        ? " На фоне кассы цифра может казаться маленькой — но это доля от вашей выручки за игру, не «копейки»."
         : "";
     missEl.classList.remove("result-miss--impact");
     missEl.replaceChildren();
     missEl.appendChild(
       document.createTextNode(
-        "Упущенный потенциал (перегруз и тайминг, промахи, развилки, ловушки): ~ ",
+        "Упущено (оценка, с учётом промахов и ловушек): ~ ",
       ),
     );
     const rubSpan = document.createElement("span");
@@ -260,7 +260,7 @@ function showResult(stats, role) {
   $("btn-to-cta").onclick = () => {
     showScreen("cta");
     $("cta-recap-arch").textContent = arch.title;
-    $("cta-recap-stat").textContent = `+ ${formatRub(stats.moneyEnd)} заработано`;
+    $("cta-recap-stat").textContent = `+ ${formatRub(stats.moneyEnd)} в кассе`;
     $("cta-sub").textContent = arch.ctaSub;
     const main = $("btn-cta-main");
     const sec = $("btn-cta-secondary");
@@ -296,7 +296,7 @@ function formatMissedShare(missed, earned) {
           maximumFractionDigits: pct < 10 ? 1 : 0,
           minimumFractionDigits: 0,
         }).format(Math.round(pct * 10) / 10);
-  return ` (~${formatted}% от выручки за смену)`;
+  return ` (~${formatted}% от выручки за этот раунд)`;
 }
 
 /** «Рывками» к финальной сумме — красная цифра ощущается неожиданнее */

@@ -18,20 +18,20 @@
       <section id="screen-start" class="screen screen--active" aria-label="Старт">
         <div class="screen__bg screen__bg--grid"></div>
         <div class="screen__content screen__content--center">
-          <p class="eyebrow">Не тест и не лекция — одна смена на виртуальном рынке</p>
+          <p class="eyebrow">Один короткий раунд на виртуальном рынке</p>
           <h1 class="title title--xl">Нейрошторм</h1>
-          <p class="tagline tagline--lead">За ~70 секунд вы не «узнаете про ИИ», а <strong>проживёте</strong>, где теряете деньги, время и нервы — и какой <strong>первый практический шаг</strong> от этого спасает.</p>
-          <p class="tagline tagline--secondary">Рынок уже разделился: те, кто встроил ИИ в работу, и те, кто думает начать. Игра покажет, где именно вы — и с чего стартовать сейчас, пока разрыв не стал необратимым.</p>
-          <button type="button" class="btn btn--primary" id="btn-start">Начать смену</button>
+          <p class="tagline tagline--lead">Примерно минута игры: куда уходят деньги, время и силы — и что с этим можно сделать на практике.</p>
+          <p class="tagline tagline--secondary">Коротко и по делу: посмотреть, как вы расхватываете задачи.</p>
+          <button type="button" class="btn btn--primary" id="btn-start">Играть</button>
         </div>
       </section>
 
       <!-- 2. Роль -->
-      <section id="screen-role" class="screen" aria-label="Выбор роли" hidden>
+      <section id="screen-role" class="screen screen--role" aria-label="Выбор роли" hidden>
         <div class="screen__bg screen__bg--grid"></div>
-        <div class="screen__content">
-          <h2 class="title">Кто ты на этом рынке?</h2>
-          <p class="hint">Роль не меняет сложность — задаёт <strong>контекст финала</strong>: выводы и примеры будут ближе к вашим реальным задачам.</p>
+        <div class="screen__content screen__content--role">
+          <h2 class="title title--role">Кто вы?</h2>
+          <p class="hint hint--role">Только для текста в конце: примеры ближе к вашим задачам. Сложность одна.</p>
           <div class="role-grid" id="role-grid"></div>
         </div>
       </section>
@@ -39,40 +39,43 @@
       <!-- 3. Onboarding -->
       <section id="screen-onboarding" class="screen" aria-label="Правила" hidden>
         <div class="screen__bg screen__bg--grid"></div>
-        <div class="screen__content screen__content--scroll">
-          <h2 class="title">Как читать смену</h2>
-          <p class="onboarding-lead">Внизу экрана — «корзина» рынка: подставляйте её под падающие карточки. Зелёное и фиолетовое <strong>ловим</strong>, красное <strong>не ловим</strong> — пусть уходит мимо.</p>
-          <ul class="rules">
+        <div class="screen__content screen__content--scroll screen__content--onboarding">
+          <h2 class="title title--onboarding">Как играть</h2>
+          <p class="onboarding-lead">Внизу двигается <strong>корзина</strong> — подставляйте её под карточки. В игре всё видно: что стоит подобрать, что лучше пропустить.</p>
+          <ul class="rules rules--compact">
             <li>
               <span class="rules__icon rules__icon--good" aria-hidden="true"></span>
-              <span class="rules__body"><strong>Польза</strong> — деньги, время и энергия. При ловле всплывают строки вроде «плюс в кассу» и «минус часа сна» — три шкалы считаются по отдельности.</span>
+              <span class="rules__body"><strong>Польза и ускорители</strong> — в корзину. Три шкалы сверху: деньги, личное время, энергия (считаются отдельно).</span>
             </li>
             <li>
               <span class="rules__icon rules__icon--bad" aria-hidden="true"></span>
-              <span class="rules__body"><strong>Ловушки</strong> — крадут фокус и маржу. Не ловите их корзиной.</span>
+              <span class="rules__body"><strong>Ловушки</strong> — не в корзину. Попали в корзину = штраф.</span>
             </li>
             <li>
               <span class="rules__icon rules__icon--fork" aria-hidden="true"></span>
-              <span class="rules__body"><strong>Развилки</strong> — пауза с историей: выбор сразу бьёт по шкалам. Таймер смены стоит, пока решаете.</span>
+              <span class="rules__body"><strong>Развилки</strong> — пауза и выбор; на время ответа «игровые часы» не идут.</span>
             </li>
           </ul>
-          <div class="resource-legend">
-            <div class="resource-legend__item"><span class="pill pill--money">₽ Деньги</span></div>
-            <div class="resource-legend__item"><span class="pill pill--time">⏱ Время</span></div>
-            <div class="resource-legend__item"><span class="pill pill--energy">⚡ Энергия</span></div>
+          <div class="resource-legend resource-legend--note">
+            <p class="resource-legend__note">Жёлтая полоска «Время» — это <strong>запас личного времени</strong> в игре, не таймер раунда. Сколько длится раунд — написано по центру сверху.</p>
+            <div class="resource-legend__pills">
+              <span class="pill pill--money">₽ касса</span>
+              <span class="pill pill--time">⏱ время</span>
+              <span class="pill pill--energy">⚡ энергия</span>
+            </div>
           </div>
-          <button type="button" class="btn btn--primary" id="btn-onboarding-ok">Выйти на линию рынка</button>
+          <button type="button" class="btn btn--primary" id="btn-onboarding-ok">Поехали</button>
         </div>
       </section>
 
       <!-- 4. Игра -->
       <section id="screen-game" class="screen screen--game" aria-label="Игра" hidden>
         <header class="hud">
-          <p class="hud__legend" aria-hidden="true">Три шкалы смены: поймал нужное — растёт, поймал ловушку — бьёт по всем</p>
+          <p class="hud__legend" aria-hidden="true">Три шкалы: польза растит, ловушка бьёт по всем</p>
           <div class="hud__row hud__row--stats">
             <div class="hud__stat-block" id="hud-stat-money" data-stat="money">
               <span class="hud__stat-name">Касса</span>
-              <div class="hud__stat" title="Деньги за смену"><span class="hud__label" aria-hidden="true">₽</span><span id="hud-money">0</span></div>
+              <div class="hud__stat" title="Деньги в кассе за раунд"><span class="hud__label" aria-hidden="true">₽</span><span id="hud-money">0</span></div>
               <div class="hud__bar hud__bar--thin"><div class="hud__bar-fill hud__bar-fill--money" id="bar-money"></div></div>
             </div>
             <div class="hud__stat-block" id="hud-stat-time" data-stat="time">
@@ -88,7 +91,10 @@
           </div>
           <div class="hud__meta">
             <span id="hud-role" class="hud__role"></span>
-            <span id="hud-timer" class="hud__timer">1:10</span>
+            <div class="hud__timer-wrap" role="timer" aria-live="polite">
+              <span id="hud-timer-day" class="hud__timer-day">Осталось ~8,0 ч из 8</span>
+              <span id="hud-timer-real" class="hud__timer-real">Реально ≈ 1:10</span>
+            </div>
             <span id="hud-combo" class="hud__combo"></span>
           </div>
           <p class="hud__wave" id="hud-wave" aria-live="polite"></p>
@@ -96,32 +102,32 @@
         </header>
         <div class="game-field-wrap">
           <div id="game-field" class="game-field" tabindex="0" role="application" aria-label="Игровое поле" aria-describedby="game-hint"></div>
-          <p class="game-field__hint" id="game-hint">Свайп/ведите палец по полю — двигается корзина · ◀ ▶ или клавиши ← → · Зелёное/фиолетовое ловим, красное мимо.<br />Мало энергии — корзина двигается медленнее. Много «пользы» подряд без паузы — перегрев по энергии.</p>
+          <p class="game-field__hint" id="game-hint">Тяните палец по полю или ◀ ▶ / ← → — двигается корзина. Карточки идут до конца таймера; пауза только на развилке.<br />Мало энергии — корзина тяжелее. Много пользы подряд — перегрев по энергии.</p>
           <div class="game-controls">
             <button type="button" class="game-arrow" id="game-arrow-left" aria-label="Корзина влево">◀</button>
-            <span class="game-controls__label" id="game-controls-label">Управление</span>
+            <span class="game-controls__label" id="game-controls-label">Корзина</span>
             <button type="button" class="game-arrow" id="game-arrow-right" aria-label="Корзина вправо">▶</button>
           </div>
         </div>
         <div id="fork-overlay" class="fork-overlay" hidden>
           <div class="fork-plate" role="dialog" aria-modal="true" aria-labelledby="fork-title">
             <div class="fork-plate__hazard" aria-hidden="true"></div>
-            <p class="fork-plate__strap">Развилка · рынок не ждёт</p>
+            <p class="fork-plate__strap">Развилка</p>
             <p class="fork-plate__title" id="fork-title">Развилка</p>
             <p class="fork-plate__context" id="fork-context"></p>
-            <p class="fork-plate__micro">Выберите шаг — сразу ударит по кассе, времени и энергии. Иногда после ответа откроется вторая развилка — последствия первого выбора.</p>
+            <p class="fork-plate__micro">Ответ сразу меняет шкалы. Иногда будет второй вопрос — от первого ответа.</p>
             <div class="fork-plate__choices" id="fork-choices"></div>
           </div>
         </div>
-        <div id="chaos-banner" class="chaos-banner" hidden>Хаос-режим: рынок ускорился</div>
+        <div id="chaos-banner" class="chaos-banner" hidden>Мало сил — всё быстрее</div>
       </section>
 
       <!-- 5. Результат -->
       <section id="screen-result" class="screen" aria-label="Результат" hidden>
         <div class="screen__bg screen__bg--grid"></div>
         <div class="screen__content screen__content--scroll">
-          <p class="eyebrow">Смена окончена</p>
-          <h2 class="title title--lg" id="result-headline">Итог смены</h2>
+          <p class="eyebrow">Раунд окончен</p>
+          <h2 class="title title--lg" id="result-headline">Итог</h2>
           <div class="result-big" id="result-money"></div>
           <p class="result-miss" id="result-missed"></p>
           <p class="result-mode" id="result-archetype"></p>
@@ -129,7 +135,7 @@
           <p class="result-text" id="result-body"></p>
           <p class="result-insight" id="result-insight"></p>
           <div class="result-block result-block--mistakes">
-            <h3 class="result-block__title">Что мешало в этой смене</h3>
+            <h3 class="result-block__title">Что мешало</h3>
             <ul class="result-list result-list--mistakes" id="result-mistakes"></ul>
           </div>
           <div class="result-case">
@@ -157,7 +163,7 @@
         <div class="screen__bg screen__bg--grid"></div>
         <div class="screen__content screen__content--center">
           <div class="cta-recap" id="cta-recap">
-            <span class="cta-recap__label">Ваш результат за смену</span>
+            <span class="cta-recap__label">Ваш результат</span>
             <span class="cta-recap__arch" id="cta-recap-arch"></span>
             <span class="cta-recap__stat" id="cta-recap-stat"></span>
           </div>
@@ -174,7 +180,7 @@
               Удобнее в новой вкладке — открыть там
             </button>
           </p>
-          <button type="button" class="btn btn--ghost" id="btn-cta-secondary">Пройти ещё одну смену</button>
+          <button type="button" class="btn btn--ghost" id="btn-cta-secondary">Сыграть ещё раз</button>
         </div>
       </section>
     </div>

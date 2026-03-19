@@ -716,7 +716,7 @@
       step: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0434\u043D\u0443 \u0437\u0430\u0434\u0430\u0447\u0443, \u043A\u043E\u0442\u043E\u0440\u0443\u044E \u0434\u0435\u043B\u0430\u0435\u0442\u0435 \u043A\u0430\u0436\u0434\u044B\u0439 \u0434\u0435\u043D\u044C \u0440\u0443\u043A\u0430\u043C\u0438. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0435\u0451 \u0447\u0435\u0440\u0435\u0437 \u043D\u0435\u0439\u0440\u043E\u0441\u0435\u0442\u044C. \u0417\u0430\u0441\u0435\u043A\u0438\u0442\u0435 \u0432\u0440\u0435\u043C\u044F \u2014 \u044D\u0442\u043E \u0432\u0430\u0448\u0430 \u043F\u0435\u0440\u0432\u0430\u044F \u0442\u043E\u0447\u043A\u0430.",
       tools: ["ChatGPT / Claude", "Midjourney / Recraft", "Notion \u0418\u0418"],
       ctaMain: "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C \u043C\u043E\u0438 \u0437\u0430\u0434\u0430\u0447\u0438 \u0441 \u0418\u0418",
-      ctaSecondary: "\u041F\u0440\u043E\u0439\u0442\u0438 \u0435\u0449\u0451 \u043E\u0434\u043D\u0443 \u0441\u043C\u0435\u043D\u0443",
+      ctaSecondary: "\u0421\u044B\u0433\u0440\u0430\u0442\u044C \u0435\u0449\u0451 \u0440\u0430\u0437",
       ctaSub: "\u0422\u0435, \u043A\u0442\u043E \u0443\u0431\u0440\u0430\u043B \u0440\u0443\u0442\u0438\u043D\u0443 \u0433\u043E\u0434 \u043D\u0430\u0437\u0430\u0434, \u0441\u0435\u0439\u0447\u0430\u0441 \u0431\u0435\u0440\u0443\u0442 \u0432\u0434\u0432\u043E\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u0437\u0430 \u0442\u043E \u0436\u0435 \u0432\u0440\u0435\u043C\u044F. \u041F\u043E\u043A\u0430\u0436\u0435\u043C, \u0441 \u0447\u0435\u0433\u043E \u043D\u0430\u0447\u0430\u0442\u044C \u0438\u043C\u0435\u043D\u043D\u043E \u0432\u0430\u043C."
     },
     cautious: {
@@ -812,7 +812,7 @@
       step: "\u0412\u043E\u0437\u044C\u043C\u0438\u0442\u0435 \u043E\u0434\u043D\u0443 \u0433\u043B\u0430\u0432\u043D\u0443\u044E \u0437\u0430\u0434\u0430\u0447\u0443 \u043D\u0435\u0434\u0435\u043B\u0438 \u0438 \u0440\u0430\u0437\u0431\u0435\u0439\u0442\u0435 \u0435\u0451 \u043D\u0430 \u0442\u0440\u0438 \u0448\u0430\u0433\u0430 \u0441 \u0418\u0418: \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430 \u2014 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u2014 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0430. \u041E\u0434\u0438\u043D \u0448\u0430\u0433 \u0437\u0430 \u0440\u0430\u0437.",
       tools: ["ChatGPT", "Midjourney", "Notion \u0418\u0418"],
       ctaMain: "\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u043C\u0430\u0440\u0448\u0440\u0443\u0442 \u043F\u043E\u0434 \u043C\u043E\u0439 \u0440\u0438\u0442\u043C",
-      ctaSecondary: "\u041F\u0440\u043E\u0439\u0442\u0438 \u0435\u0449\u0451 \u043E\u0434\u043D\u0443 \u0441\u043C\u0435\u043D\u0443",
+      ctaSecondary: "\u0421\u044B\u0433\u0440\u0430\u0442\u044C \u0435\u0449\u0451 \u0440\u0430\u0437",
       ctaSub: "\u0421\u0435\u0439\u0447\u0430\u0441 \u043F\u0440\u043E\u0449\u0435 \u0432\u0441\u0435\u0433\u043E \u043D\u0430\u0447\u0430\u0442\u044C: \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B, \u0438 \u0440\u044B\u043D\u043E\u043A \u0435\u0449\u0451 \u043D\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u044D\u0442\u043E\u0433\u043E \u043E\u0442 \u0432\u0441\u0435\u0445. \u0421\u043E\u0431\u0435\u0440\u0451\u043C \u0441\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u0434 \u0432\u0430\u0448 \u0442\u0435\u043C\u043F."
     }
   };
@@ -919,6 +919,7 @@
   // js/game.js
   var SESSION_MS = 7e4;
   var WAVE_MS = SESSION_MS / 3;
+  var WORKDAY_HOURS_VIRTUAL = 8;
   var SPAWN_INTERVAL_START_MS = 1120;
   var SPAWN_INTERVAL_RAMP_MS = 600;
   var CHAOS_SPAWN_INTERVAL_MULT = 0.66;
@@ -1052,8 +1053,8 @@
       this._lastGoodCatchMs = 0;
       this._raf = null;
       this._boundLoop = this.loop.bind(this);
-      this.CATCHER_W = 90;
-      this.CATCHER_H = 18;
+      this.CATCHER_W = 96;
+      this.CATCHER_H = 24;
       this.catcherX = 0;
       this.catcherEl = null;
       this._pointerId = null;
@@ -1785,7 +1786,16 @@
     updateHud(elapsed) {
       const left = Math.max(0, SESSION_MS - elapsed);
       const sec = Math.ceil(left / 1e3);
-      this.hud.timer.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+      const mm = Math.floor(sec / 60);
+      const ss = String(sec % 60).padStart(2, "0");
+      if (this.hud.timerDay && this.hud.timerReal) {
+        const vHours = WORKDAY_HOURS_VIRTUAL * left / SESSION_MS;
+        const vStr = vHours.toFixed(1).replace(".", ",");
+        this.hud.timerDay.textContent = `\u041E\u0441\u0442\u0430\u043B\u043E\u0441\u044C ~${vStr} \u0447 \u0438\u0437 ${WORKDAY_HOURS_VIRTUAL}`;
+        this.hud.timerReal.textContent = `\u0420\u0435\u0430\u043B\u044C\u043D\u043E \u2248 ${mm}:${ss}`;
+      } else if (this.hud.timer) {
+        this.hud.timer.textContent = `${mm}:${ss}`;
+      }
       this.hud.money.textContent = formatMoneyHud(this.money);
       this.hud.time.textContent = String(Math.round(this.time));
       this.hud.energy.textContent = String(Math.round(this.energy));
@@ -1947,8 +1957,7 @@
       b.type = "button";
       b.className = "role-card";
       const pitch = r.pitch || r.desc || "";
-      const story = r.story || "";
-      b.innerHTML = `<span class="role-card__emoji" aria-hidden="true">${r.emoji}</span><span class="role-card__name">${r.name}</span><span class="role-card__pitch">${pitch}</span>${story ? `<span class="role-card__story">${story}</span>` : ""}`;
+      b.innerHTML = `<span class="role-card__emoji" aria-hidden="true">${r.emoji}</span><span class="role-card__name">${r.name}</span><span class="role-card__pitch">${pitch}</span>`;
       b.addEventListener("click", () => {
         selectedRole = r;
         track("role_selected", { role: r.id });
@@ -1972,7 +1981,8 @@
       statMoney: $("hud-stat-money"),
       statTime: $("hud-stat-time"),
       statEnergy: $("hud-stat-energy"),
-      timer: $("hud-timer"),
+      timerDay: $("hud-timer-day"),
+      timerReal: $("hud-timer-real"),
       combo: $("hud-combo"),
       wave: $("hud-wave"),
       pulse: $("hud-pulse")
@@ -1994,19 +2004,19 @@
     const arch = computeArchetype(stats);
     track("final_archetype", { key: arch.key, stats });
     showScreen("result");
-    $("result-headline").textContent = "\u0421\u043C\u0435\u043D\u0430 \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u043B\u0430\u0441\u044C \u2014 \u0432\u043E\u0442 \u0447\u0442\u043E \u043E\u043D\u0430 \u043F\u043E\u043A\u0430\u0437\u0430\u043B\u0430";
-    $("result-money").textContent = `\u0417\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E \u0437\u0430 \u0441\u043C\u0435\u043D\u0443: ${formatRub(stats.moneyEnd)}`;
+    $("result-headline").textContent = "\u0420\u0430\u0443\u043D\u0434 \u0437\u0430\u043A\u043E\u043D\u0447\u0435\u043D \u2014 \u043A\u0440\u0430\u0442\u043A\u0438\u0439 \u0438\u0442\u043E\u0433";
+    $("result-money").textContent = `\u0412 \u043A\u0430\u0441\u0441\u0435: ${formatRub(stats.moneyEnd)}`;
     const missed = stats.missedIncome || 0;
     const earned = Math.max(0, stats.moneyEnd || 0);
     const missEl = $("result-missed");
     if (missed > 2e3) {
       const share = formatMissedShare(missed, earned);
-      const tail = earned > 0 && missed / earned < 0.12 ? " \u041D\u0430 \u043E\u0434\u043D\u043E\u0439 \u0441\u043C\u0435\u043D\u0435 \u0446\u0438\u0444\u0440\u0430 \u043A\u0430\u0436\u0435\u0442\u0441\u044F \u043D\u0435\u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043D\u0430 \u0444\u043E\u043D\u0435 \u043A\u0430\u0441\u0441\u044B \u2014 \u043D\u043E \u044D\u0442\u043E \u0443\u0436\u0435 \u0434\u043E\u043B\u044F \u0432\u044B\u0440\u0443\u0447\u043A\u0438, \u0430 \u043D\u0435 \xAB\u043C\u0435\u043B\u043E\u0447\u044C \u0432 \u043A\u0430\u0440\u043C\u0430\u043D\u0435\xBB." : "";
+      const tail = earned > 0 && missed / earned < 0.12 ? " \u041D\u0430 \u0444\u043E\u043D\u0435 \u043A\u0430\u0441\u0441\u044B \u0446\u0438\u0444\u0440\u0430 \u043C\u043E\u0436\u0435\u0442 \u043A\u0430\u0437\u0430\u0442\u044C\u0441\u044F \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u043E\u0439 \u2014 \u043D\u043E \u044D\u0442\u043E \u0434\u043E\u043B\u044F \u043E\u0442 \u0432\u0430\u0448\u0435\u0439 \u0432\u044B\u0440\u0443\u0447\u043A\u0438 \u0437\u0430 \u0438\u0433\u0440\u0443, \u043D\u0435 \xAB\u043A\u043E\u043F\u0435\u0439\u043A\u0438\xBB." : "";
       missEl.classList.remove("result-miss--impact");
       missEl.replaceChildren();
       missEl.appendChild(
         document.createTextNode(
-          "\u0423\u043F\u0443\u0449\u0435\u043D\u043D\u044B\u0439 \u043F\u043E\u0442\u0435\u043D\u0446\u0438\u0430\u043B (\u043F\u0435\u0440\u0435\u0433\u0440\u0443\u0437 \u0438 \u0442\u0430\u0439\u043C\u0438\u043D\u0433, \u043F\u0440\u043E\u043C\u0430\u0445\u0438, \u0440\u0430\u0437\u0432\u0438\u043B\u043A\u0438, \u043B\u043E\u0432\u0443\u0448\u043A\u0438): ~ "
+          "\u0423\u043F\u0443\u0449\u0435\u043D\u043E (\u043E\u0446\u0435\u043D\u043A\u0430, \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u043F\u0440\u043E\u043C\u0430\u0445\u043E\u0432 \u0438 \u043B\u043E\u0432\u0443\u0448\u0435\u043A): ~ "
         )
       );
       const rubSpan = document.createElement("span");
@@ -2063,7 +2073,7 @@
     $("btn-to-cta").onclick = () => {
       showScreen("cta");
       $("cta-recap-arch").textContent = arch.title;
-      $("cta-recap-stat").textContent = `+ ${formatRub(stats.moneyEnd)} \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E`;
+      $("cta-recap-stat").textContent = `+ ${formatRub(stats.moneyEnd)} \u0432 \u043A\u0430\u0441\u0441\u0435`;
       $("cta-sub").textContent = arch.ctaSub;
       const main = $("btn-cta-main");
       const sec = $("btn-cta-secondary");
@@ -2093,7 +2103,7 @@
       maximumFractionDigits: pct < 10 ? 1 : 0,
       minimumFractionDigits: 0
     }).format(Math.round(pct * 10) / 10);
-    return ` (~${formatted}% \u043E\u0442 \u0432\u044B\u0440\u0443\u0447\u043A\u0438 \u0437\u0430 \u0441\u043C\u0435\u043D\u0443)`;
+    return ` (~${formatted}% \u043E\u0442 \u0432\u044B\u0440\u0443\u0447\u043A\u0438 \u0437\u0430 \u044D\u0442\u043E\u0442 \u0440\u0430\u0443\u043D\u0434)`;
   }
   function animateMissedRubSpan(span, target, onDone) {
     let cur = 0;

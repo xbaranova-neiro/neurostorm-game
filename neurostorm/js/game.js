@@ -4,9 +4,11 @@ import { MARKET_HEADLINES, WAVE_THEMES, CHAOS_LINES, COMBO_FLAVOR } from "./narr
 
 const SESSION_MS = 70_000;
 const WAVE_MS = SESSION_MS / 3;
+/** Условный «рабочий день» на таймере: весь раунд = 8 ч, чтобы было ясно, сколько «дня» осталось */
+const WORKDAY_HOURS_VIRTUAL = 8;
 /** Плотнее поток падающих карточек (мс между спавнами): ниже значения → больше всего на экране, в т.ч. красных */
 const SPAWN_INTERVAL_START_MS = 1120;
-/** К концу смены интервал уменьшается на столько (ускорение к финалу) */
+/** К концу раунда интервал спавна уменьшается (ускорение к финалу) */
 const SPAWN_INTERVAL_RAMP_MS = 600;
 /** В хаосе спавн ещё чаще */
 const CHAOS_SPAWN_INTERVAL_MULT = 0.66;
@@ -137,7 +139,7 @@ export class Game {
     this.forkChoices = opts.forkChoices;
     this.forkPending = false;
     this.pendingForkTime = 0;
-    /** Не идёт в зачёт 70 с смены (пауза на развилке) */
+    /** Не идёт в зачёт 70 с раунда (пауза на развилке) */
     this.pauseMsTotal = 0;
     this._pauseWallStart = 0;
     this._forkFrozenElapsed = 0;
@@ -179,8 +181,8 @@ export class Game {
     this._raf = null;
     this._boundLoop = this.loop.bind(this);
 
-    this.CATCHER_W = 90;
-    this.CATCHER_H = 18;
+    this.CATCHER_W = 96;
+    this.CATCHER_H = 24;
     this.catcherX = 0;
     this.catcherEl = null;
     this._pointerId = null;
@@ -1007,7 +1009,16 @@ export class Game {
   updateHud(elapsed) {
     const left = Math.max(0, SESSION_MS - elapsed);
     const sec = Math.ceil(left / 1000);
-    this.hud.timer.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+    const mm = Math.floor(sec / 60);
+    const ss = String(sec % 60).padStart(2, "0");
+    if (this.hud.timerDay && this.hud.timerReal) {
+      const vHours = (WORKDAY_HOURS_VIRTUAL * left) / SESSION_MS;
+      const vStr = vHours.toFixed(1).replace(".", ",");
+      this.hud.timerDay.textContent = `Осталось ~${vStr} ч из ${WORKDAY_HOURS_VIRTUAL}`;
+      this.hud.timerReal.textContent = `Реально ≈ ${mm}:${ss}`;
+    } else if (this.hud.timer) {
+      this.hud.timer.textContent = `${mm}:${ss}`;
+    }
     this.hud.money.textContent = formatMoneyHud(this.money);
     this.hud.time.textContent = String(Math.round(this.time));
     this.hud.energy.textContent = String(Math.round(this.energy));

@@ -343,12 +343,34 @@ body::after {
   color: var(--accent);
 }
 
+/* Роли: 2×3 без скролла на типичном телефоне */
+.screen--role .screen__content--role {
+  flex: 1;
+  padding: 12px 14px 14px;
+  gap: 8px;
+  min-height: 0;
+}
+
+.title--role {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.hint--role {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  margin: 0 0 4px;
+}
+
 .role-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  overflow-y: auto;
-  padding-bottom: 8px;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
 }
 
 .role-card {
@@ -357,11 +379,15 @@ body::after {
   border: 1px solid rgba(28, 27, 25, 0.08);
   border-left: 4px solid color-mix(in srgb, var(--accent) 65%, transparent);
   border-radius: var(--radius);
-  padding: 12px 10px 12px 12px;
+  padding: 8px 8px 8px 10px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s, transform 0.15s var(--ease-out), box-shadow 0.2s;
   box-shadow: 2px 2px 0 rgba(28, 27, 25, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
 }
 
 .role-card:active {
@@ -378,24 +404,27 @@ body::after {
 }
 
 .role-card__emoji {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .role-card__name {
   display: block;
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
 .role-card__pitch {
-  display: block;
-  font-size: 0.74rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.62rem;
   color: var(--text);
-  margin-top: 6px;
-  line-height: 1.4;
+  margin-top: 4px;
+  line-height: 1.3;
   font-weight: 600;
 }
 
@@ -462,6 +491,48 @@ body::after {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
+}
+
+.screen__content--onboarding {
+  gap: 10px;
+  padding: 16px 16px 18px;
+}
+
+.title--onboarding {
+  font-size: 1.12rem;
+}
+
+.rules--compact {
+  gap: 8px;
+}
+
+.rules--compact .rules__body {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.resource-legend--note {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 10px 10px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(28, 27, 25, 0.06);
+}
+
+.resource-legend__note {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 0;
+}
+
+.resource-legend__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .pill {
@@ -601,16 +672,38 @@ body::after {
 .hud__meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-top: 8px;
   font-size: 0.72rem;
   color: var(--muted);
+  gap: 6px;
 }
 
-.hud__timer {
+.hud__timer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.hud__timer-day {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--ink-strong);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.hud__timer-real {
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.2;
 }
 
 .hud__combo {
@@ -696,18 +789,40 @@ body::after {
   position: absolute;
   left: 0;
   top: 0;
-  height: 22px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, #2d5248, #3d7a6a);
+  height: 26px;
+  border-radius: 10px 10px 14px 14px;
+  background:
+    repeating-linear-gradient(
+      92deg,
+      #2a453e 0 4px,
+      #1e342e 4px 8px
+    );
   border: 2px solid var(--ink-strong);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 3px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.12),
     0 2px 0 var(--ink-strong),
-    0 4px 12px rgba(28, 27, 25, 0.2);
+    0 5px 14px rgba(28, 27, 25, 0.22);
   will-change: transform;
   pointer-events: none;
   z-index: 6;
   transition: background 0.25s, box-shadow 0.25s;
+}
+
+/* «Ручки» корзины */
+.catcher::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 34px;
+  height: 10px;
+  transform: translateX(-50%);
+  border: 2px solid var(--ink-strong);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent);
+  pointer-events: none;
 }
 
 .catcher--combo {
